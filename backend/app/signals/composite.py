@@ -17,7 +17,7 @@ from typing import Iterable
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
-from app.models import LlmAnalysis, Ticker, CompositeSignal
+from app.models import DailyBar, LlmAnalysis, Quote, SignalOutcome, Ticker, CompositeSignal
 from app.signals.technical import score_ticker as technical_score_for
 
 
@@ -134,12 +134,43 @@ def compute_for_ticker(db: Session, ticker_id: int) -> CompositeSignal | None:
     )
 
 
+def _entry_price(db: Session, ticker_id: int) -> float | None:
+    """Best available entry price at signal time: prefer today's live quote,
+    fall back to the most recent daily-bar close."""
+    q = db.execute(select(Quote.price).where(Quote.ticker_id == ticker_id)).scalar_one_or_none()
+    if q is not None:
+        return float(q)
+    last_bar = db.execute(
+        select(DailyBar.close)
+        .where(DailyBar.ticker_id == ticker_id)
+        .order_by(DailyBar.bar_date.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+    return float(last_bar) if last_bar is not None else None
+
+
 def refresh_all(db: Session) -> int:
     ids = [r[0] for r in db.execute(select(Ticker.id).where(Ticker.is_active.is_(True))).all()]
     n = 0
     for tid in ids:
         signal = compute_for_ticker(db, tid)
-        if signal is not None:
-            db.add(signal)
-            n += 1
+        if signal is None:
+            continue
+        db.add(signal)
+        db.flush()  # need signal.id for the outcome FK
+
+        # Snapshot a forward-return tracker. The resolver worker fills in
+        # return_{1,5,21}d as the future arrives.
+        entry = _entry_price(db, tid)
+        if entry is not None:
+            db.add(SignalOutcome(
+                signal_id=signal.id,
+                ticker_id=tid,
+                signal_score=signal.score or 50,
+                signal_label=signal.signal_label or "neutral",
+                signal_confidence=signal.confidence or 30,
+                entry_price=Decimal(str(entry)),
+                signaled_at=datetime.now(timezone.utc),
+            ))
+        n += 1
     return n

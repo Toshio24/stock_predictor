@@ -110,6 +110,37 @@ class Quote(Base):
     ticker = relationship("Ticker", back_populates="quotes")
 
 
+class SignalOutcome(Base):
+    """Forward-return measurements for a single composite signal.
+
+    Created when CompositeSignal is computed; the resolver worker fills in
+    `realized_return_*` once the target dates pass. Joining outcomes against
+    composite_signals is how we measure whether the system has predictive
+    edge. No outcome row → signal hasn't matured yet."""
+    __tablename__ = "signal_outcomes"
+
+    id = Column(Integer, primary_key=True)
+    signal_id = Column(Integer, ForeignKey("composite_signals.id", ondelete="CASCADE"), nullable=False, index=True)
+    ticker_id = Column(Integer, ForeignKey("tickers.id", ondelete="CASCADE"), nullable=False, index=True)
+    signal_score = Column(Integer, nullable=False)        # composite score at signal time (0-100)
+    signal_label = Column(String(20), nullable=False)     # bullish | bearish | neutral
+    signal_confidence = Column(Integer, nullable=False)   # confidence at signal time (0-100)
+    entry_price = Column(Numeric(12, 4))                  # close-of-day price when signal fired
+    signaled_at = Column(DateTime(timezone=True), nullable=False, index=True)
+
+    # Forward returns — populated by the resolver worker as time passes.
+    # Each is the simple percent change from entry_price to the close N
+    # trading days later. NULL until resolved.
+    return_1d = Column(Numeric(8, 4))
+    return_5d = Column(Numeric(8, 4))
+    return_21d = Column(Numeric(8, 4))
+
+    # When each horizon resolved (so we can tell pending from resolved).
+    resolved_1d_at = Column(DateTime(timezone=True))
+    resolved_5d_at = Column(DateTime(timezone=True))
+    resolved_21d_at = Column(DateTime(timezone=True))
+
+
 class DailyBar(Base):
     """Daily OHLCV bar, one row per (ticker, date). TimescaleDB hypertable
     on `bar_date`. Pulled from Yahoo's chart API; no API key required."""
