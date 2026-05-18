@@ -1,0 +1,20 @@
+<%
+  var idx = index;
+  var dir = idx.change >= 0 ? 'bullish' : 'bearish';
+  var symbol = idx.change >= 0 ? '▲' : '▼';
+%>
+<div class="glass-card p-4">
+  <div class="flex items-start justify-between mb-2">
+    <div class="min-w-0">
+      <div class="text-[11px] font-semibold tracking-widest uppercase" style="color: var(--text-muted);"><%= idx.symbol %></div>
+      <div class="text-[13px] font-medium truncate" style="color: var(--text-strong);"><%= idx.name %></div>
+    </div>
+    <span class="sentiment-badge <%= dir %>"><%= symbol %> <%= Math.abs(idx.change).toFixed(2) %>%</span>
+  </div>
+  <div class="num text-2xl font-bold mb-2" style="color: var(--text-strong);">
+    <%= idx.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %>
+  </div>
+  <div class="h-10">
+    <%- include('sparkline', { points: idx.spark, variant: dir }) %>
+  </div>
+</div>

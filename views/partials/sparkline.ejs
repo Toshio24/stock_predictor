@@ -1,0 +1,23 @@
+<%
+  // Inline SVG sparkline. Always renders without requiring client JS.
+  var pts = points || [];
+  var variant = typeof variant === 'undefined' ? 'bullish' : variant;
+  var w = 100, h = 32;
+  if (pts.length < 2) {
+%><svg class="spark <%= variant %>" viewBox="0 0 <%= w %> <%= h %>" preserveAspectRatio="none"></svg><% } else {
+    var min = Math.min.apply(null, pts), max = Math.max.apply(null, pts);
+    var range = max - min || 1;
+    var stepX = w / (pts.length - 1);
+    var pathD = '';
+    var areaD = '';
+    pts.forEach(function(v, i) {
+      var x = i * stepX;
+      var y = h - ((v - min) / range) * h;
+      pathD += (i === 0 ? 'M' : 'L') + x.toFixed(2) + ',' + y.toFixed(2) + ' ';
+      areaD += (i === 0 ? 'M' + x.toFixed(2) + ',' + h + ' L' : 'L') + x.toFixed(2) + ',' + y.toFixed(2) + ' ';
+    });
+    areaD += 'L' + w + ',' + h + ' Z';
+%><svg class="spark <%= variant %>" viewBox="0 0 <%= w %> <%= h %>" preserveAspectRatio="none">
+  <path class="area-<%= variant %>" d="<%= areaD %>" />
+  <path d="<%= pathD %>" />
+</svg><% } %>

@@ -1,0 +1,41 @@
+<div class="auth-card">
+  <div class="flex items-center gap-3 mb-6">
+    <div class="brand-square"><%- include('../partials/icon', { name: 'chart', size: 18 }) %></div>
+    <div>
+      <div class="text-[16px] font-bold">Signal</div>
+      <div class="text-[10px] uppercase tracking-widest opacity-60">AI Trading</div>
+    </div>
+  </div>
+
+  <h1 class="text-[22px] font-bold mb-1">Welcome to Signal</h1>
+  <p class="text-[13px] opacity-70 mb-6">Three quick questions to tune your dashboard.</p>
+
+  <form action="/" method="get" class="space-y-5">
+    <div>
+      <div class="text-[12px] font-medium mb-2">What do you trade?</div>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="glass-tab active">Equities</button>
+        <button type="button" class="glass-tab">Crypto</button>
+        <button type="button" class="glass-tab">Futures</button>
+        <button type="button" class="glass-tab">Options</button>
+      </div>
+    </div>
+    <div>
+      <div class="text-[12px] font-medium mb-2">Time horizon</div>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="glass-tab">Intraday</button>
+        <button type="button" class="glass-tab active">Swing</button>
+        <button type="button" class="glass-tab">Position</button>
+      </div>
+    </div>
+    <div>
+      <div class="text-[12px] font-medium mb-2">Risk profile</div>
+      <div class="flex flex-wrap gap-2">
+        <button type="button" class="glass-tab">Conservative</button>
+        <button type="button" class="glass-tab active">Balanced</button>
+        <button type="button" class="glass-tab">Aggressive</button>
+      </div>
+    </div>
+    <button type="submit" class="glass-button primary w-full justify-center" style="padding: 12px;">Take me to my dashboard</button>
+  </form>
+</div>

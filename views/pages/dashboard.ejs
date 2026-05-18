@@ -1,0 +1,179 @@
+<!-- Page header -->
+<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+  <div>
+    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);">Good day, <%= user.name %>.</h1>
+    <p class="text-[14px]" style="color: var(--text-muted);">Here's the market through your model's lens.</p>
+  </div>
+  <div class="flex gap-2">
+    <button class="glass-button">Refresh</button>
+    <button class="glass-button primary">+ New alert</button>
+  </div>
+</div>
+
+<!-- Market overview carousel -->
+<section class="mb-8">
+  <div class="flex items-center justify-between mb-3">
+    <span class="section-title">Market overview</span>
+    <div class="flex gap-1.5">
+      <button class="glass-tab active">Global</button>
+      <button class="glass-tab">US</button>
+      <button class="glass-tab">Crypto</button>
+      <button class="glass-tab">Rates</button>
+    </div>
+  </div>
+  <div data-stagger class="stagger grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <% indices.forEach(function(idx) { %>
+      <%- include('../partials/market-index-card', { index: idx }) %>
+    <% }); %>
+  </div>
+</section>
+
+<!-- Two-column area: top signals + accuracy ring -->
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-8">
+  <!-- Top signals (3 cols) -->
+  <section class="lg:col-span-3">
+    <div class="flex items-center justify-between mb-3">
+      <span class="section-title">Top signals</span>
+      <a href="/signals" class="glass-tab">View all →</a>
+    </div>
+    <div data-stagger class="stagger grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      <% signals.forEach(function(s) { %>
+        <%- include('../partials/signal-card', { signal: s }) %>
+      <% }); %>
+    </div>
+  </section>
+
+  <!-- Accuracy ring (2 cols) -->
+  <section class="lg:col-span-2">
+    <span class="section-title">Signal accuracy · 30d</span>
+    <div class="glass-card p-6">
+      <div class="flex items-center gap-6">
+        <div class="relative w-40 h-40 flex-shrink-0">
+          <svg class="ring w-full h-full">
+            <defs>
+              <linearGradient id="ringGrad" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stop-color="#3b82f6"/>
+                <stop offset="100%" stop-color="#8b5cf6"/>
+              </linearGradient>
+            </defs>
+            <circle class="track" cx="80" cy="80" r="68"/>
+            <circle class="progress" cx="80" cy="80" r="68"
+              stroke-dasharray="<%= 2 * Math.PI * 68 %>"
+              stroke-dashoffset="<%= 2 * Math.PI * 68 * (1 - accuracy.overall / 100) %>"
+            />
+          </svg>
+          <div class="absolute inset-0 grid place-items-center text-center">
+            <div>
+              <div class="num text-3xl font-bold" style="color: var(--text-strong);"><%= accuracy.overall %>%</div>
+              <div class="text-[10px] uppercase tracking-widest" style="color: var(--text-muted);">accuracy</div>
+            </div>
+          </div>
+        </div>
+        <div class="flex-1 space-y-2.5">
+          <div>
+            <div class="flex justify-between text-[12px] mb-1">
+              <span style="color: var(--text-muted);">Bullish calls</span>
+              <span class="num font-semibold text-bull"><%= accuracy.bullish %>%</span>
+            </div>
+            <div class="confidence-bar"><span style="width: <%= accuracy.bullish %>%; background: linear-gradient(90deg,#10b981,#059669);"></span></div>
+          </div>
+          <div>
+            <div class="flex justify-between text-[12px] mb-1">
+              <span style="color: var(--text-muted);">Bearish calls</span>
+              <span class="num font-semibold text-bear"><%= accuracy.bearish %>%</span>
+            </div>
+            <div class="confidence-bar"><span style="width: <%= accuracy.bearish %>%; background: linear-gradient(90deg,#ef4444,#dc2626);"></span></div>
+          </div>
+          <div>
+            <div class="flex justify-between text-[12px] mb-1">
+              <span style="color: var(--text-muted);">Neutral calls</span>
+              <span class="num font-semibold text-neutral"><%= accuracy.neutral %>%</span>
+            </div>
+            <div class="confidence-bar"><span style="width: <%= accuracy.neutral %>%; background: linear-gradient(90deg,#f59e0b,#d97706);"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- News + Watchlist + Sectors row -->
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+  <!-- News feed (2 cols) -->
+  <section class="lg:col-span-2">
+    <div class="flex items-center justify-between mb-3">
+      <span class="section-title">Live news</span>
+      <a href="/news" class="glass-tab">All →</a>
+    </div>
+    <div class="space-y-3" data-stagger>
+      <% news.slice(0, 5).forEach(function(n) { %>
+        <%- include('../partials/news-card', { news: n, variant: 'compact' }) %>
+      <% }); %>
+    </div>
+  </section>
+
+  <!-- Watchlist (3 cols) -->
+  <section class="lg:col-span-3">
+    <div class="flex items-center justify-between mb-3">
+      <span class="section-title">Watchlist</span>
+      <div class="flex gap-1.5">
+        <button class="glass-tab active">All</button>
+        <button class="glass-tab">Bullish</button>
+        <button class="glass-tab">Bearish</button>
+      </div>
+    </div>
+    <div class="glass-table">
+      <table class="w-full">
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Name</th>
+            <th class="text-right">Price</th>
+            <th class="text-right">Change</th>
+            <th class="text-right">Score</th>
+            <th>Signal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% watchlist.forEach(function(w) { %>
+            <tr>
+              <td><a href="/ticker/<%= w.ticker %>" class="ticker-badge"><%= w.ticker %></a></td>
+              <td class="truncate max-w-[200px]" style="color: var(--text);"><%= w.name %></td>
+              <td class="num text-right" style="color: var(--text-strong);">$<%= w.price.toFixed(2) %></td>
+              <td class="num text-right font-semibold <%= w.change >= 0 ? 'text-bull' : 'text-bear' %>">
+                <%= w.change >= 0 ? '+' : '' %><%= w.change.toFixed(2) %>%
+              </td>
+              <td class="num text-right">
+                <span class="score-badge <%= w.score >= 80 ? 'high' : w.score >= 60 ? 'med' : 'low' %>"><%= w.score %></span>
+              </td>
+              <td><span class="sentiment-badge <%= w.signal %>"><%= w.signal %></span></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Sectors -->
+    <div class="mt-6">
+      <span class="section-title">Sector performance</span>
+      <div data-stagger class="stagger grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <% sectors.forEach(function(sec) {
+          var dir = sec.change >= 0 ? 'bullish' : 'bearish';
+        %>
+          <div class="glass-card p-3">
+            <div class="text-[12px] font-medium mb-1.5 truncate" style="color: var(--text);"><%= sec.name %></div>
+            <div class="flex items-center justify-between">
+              <span class="num text-[15px] font-bold <%= sec.change >= 0 ? 'text-bull' : 'text-bear' %>">
+                <%= sec.change >= 0 ? '+' : '' %><%= sec.change.toFixed(2) %>%
+              </span>
+              <span class="text-[10px]" style="color: var(--text-muted);"><%= sec.weight %>%</span>
+            </div>
+            <div class="confidence-bar mt-2">
+              <span style="width: <%= Math.min(100, Math.abs(sec.change) * 25 + 10) %>%; background: <%= dir === 'bullish' ? 'linear-gradient(90deg,#10b981,#059669)' : 'linear-gradient(90deg,#ef4444,#dc2626)' %>;"></span>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+  </section>
+</div>

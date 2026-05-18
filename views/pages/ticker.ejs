@@ -1,0 +1,156 @@
+<%
+  var s = signal;
+  var changeClass = s.change >= 0 ? 'text-bull' : 'text-bear';
+  var changeSym = s.change >= 0 ? '▲' : '▼';
+%>
+
+<!-- Header -->
+<div class="flex items-start justify-between mb-6 flex-wrap gap-4">
+  <div class="flex items-center gap-4">
+    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-accent to-purple-500 grid place-items-center text-white text-lg font-bold">
+      <%= s.ticker.slice(0, 2) %>
+    </div>
+    <div>
+      <div class="flex items-center gap-2 mb-1">
+        <h1 class="text-2xl lg:text-3xl font-bold" style="color: var(--text-strong);"><%= s.ticker %></h1>
+        <span class="sentiment-badge <%= s.signal %>"><%= s.signal %></span>
+        <span class="score-badge <%= s.score >= 80 ? 'high' : s.score >= 60 ? 'med' : 'low' %>"><%= s.score %></span>
+      </div>
+      <div class="text-[14px]" style="color: var(--text-muted);"><%= s.name %> · <%= s.sector %></div>
+    </div>
+  </div>
+  <div class="flex items-end gap-6">
+    <div class="text-right">
+      <div class="num text-4xl font-bold" style="color: var(--text-strong);">$<%= s.price.toFixed(2) %></div>
+      <div class="num text-[14px] font-semibold <%= changeClass %>"><%= changeSym %> <%= Math.abs(s.change).toFixed(2) %>% today</div>
+    </div>
+    <div class="flex flex-col gap-2">
+      <button class="glass-button">+ Watchlist</button>
+      <button class="glass-button primary">Set alert</button>
+    </div>
+  </div>
+</div>
+
+<!-- Price chart -->
+<section class="mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <span class="section-title">Price · 90 days</span>
+    <div class="flex gap-1.5">
+      <button class="glass-tab">1D</button>
+      <button class="glass-tab">5D</button>
+      <button class="glass-tab">1M</button>
+      <button class="glass-tab active">3M</button>
+      <button class="glass-tab">1Y</button>
+      <button class="glass-tab">All</button>
+    </div>
+  </div>
+  <div class="glass-card p-4">
+    <div class="h-72" data-spark='<%= JSON.stringify(history) %>' data-variant="<%= s.signal %>"></div>
+  </div>
+</section>
+
+<!-- Two-col: signal rationale + fundamentals -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+  <!-- Signal rationale -->
+  <section class="lg:col-span-2">
+    <span class="section-title">Signal rationale</span>
+    <div class="glass-card p-5">
+      <p class="text-[14px] leading-relaxed mb-4" style="color: var(--text);"><%= s.rationale %></p>
+      <div>
+        <div class="flex items-center justify-between text-[12px] mb-1.5">
+          <span style="color: var(--text-muted);">Model confidence</span>
+          <span class="num font-semibold" style="color: var(--text-strong);"><%= s.confidence %>%</span>
+        </div>
+        <div class="confidence-bar"><span style="width: <%= s.confidence %>%;"></span></div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-4 mt-5 pt-5 border-t" style="border-color: rgba(var(--border-rgb),0.08);">
+        <div>
+          <div class="text-[11px] uppercase tracking-widest mb-1" style="color: var(--text-muted);">Signal age</div>
+          <div class="num text-[15px] font-semibold" style="color: var(--text-strong);"><%= s.updatedAt %></div>
+        </div>
+        <div>
+          <div class="text-[11px] uppercase tracking-widest mb-1" style="color: var(--text-muted);">Score</div>
+          <div class="num text-[15px] font-semibold" style="color: var(--text-strong);"><%= s.score %> / 100</div>
+        </div>
+        <div>
+          <div class="text-[11px] uppercase tracking-widest mb-1" style="color: var(--text-muted);">Direction</div>
+          <div class="text-[15px] font-semibold capitalize" style="color: var(--text-strong);"><%= s.signal %></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fundamentals -->
+  <section>
+    <span class="section-title">Fundamentals</span>
+    <div class="glass-card p-5">
+      <% var rows = [
+          ['Market cap', fundamentals.marketCap],
+          ['P/E ratio', fundamentals.pe],
+          ['EPS', '$' + fundamentals.eps],
+          ['Dividend', fundamentals.dividend],
+          ['Beta', fundamentals.beta],
+          ['52w high', '$' + fundamentals.high52],
+          ['52w low', '$' + fundamentals.low52],
+          ['Avg volume', fundamentals.volume],
+      ]; %>
+      <dl class="grid grid-cols-1 gap-2.5">
+        <% rows.forEach(function(r){ %>
+          <div class="flex justify-between text-[13px]">
+            <dt style="color: var(--text-muted);"><%= r[0] %></dt>
+            <dd class="num font-semibold" style="color: var(--text-strong);"><%= r[1] %></dd>
+          </div>
+        <% }); %>
+      </dl>
+    </div>
+  </section>
+</div>
+
+<!-- Signal history + news -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <section class="lg:col-span-2">
+    <span class="section-title">Signal history · last 5</span>
+    <div class="glass-table">
+      <table class="w-full">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Signal</th>
+            <th class="text-right">Score</th>
+            <th class="text-right">Entry</th>
+            <th class="text-right">Exit</th>
+            <th class="text-right">Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% [
+            ['2026-05-15', 'bullish', 88, 138.20, 142.31, 2.97],
+            ['2026-04-30', 'bullish', 82, 130.50, 137.80, 5.59],
+            ['2026-04-12', 'neutral',  61, 128.10, 130.50, 1.87],
+            ['2026-03-28', 'bearish',  74, 134.20, 128.10, 4.55],
+            ['2026-03-08', 'bullish',  91, 119.40, 134.20, 12.40],
+          ].forEach(function(h) { %>
+            <tr>
+              <td class="text-[12px] num" style="color: var(--text-muted);"><%= h[0] %></td>
+              <td><span class="sentiment-badge <%= h[1] %>"><%= h[1] %></span></td>
+              <td class="num text-right"><%= h[2] %></td>
+              <td class="num text-right" style="color: var(--text);">$<%= h[3].toFixed(2) %></td>
+              <td class="num text-right" style="color: var(--text);">$<%= h[4].toFixed(2) %></td>
+              <td class="num text-right font-semibold <%= h[5] >= 0 ? 'text-bull' : 'text-bear' %>">+<%= h[5].toFixed(2) %>%</td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <span class="section-title">Related news</span>
+    <div class="space-y-3">
+      <% news.slice(0, 3).forEach(function(n) { %>
+        <%- include('../partials/news-card', { news: n, variant: 'compact' }) %>
+      <% }); %>
+    </div>
+  </section>
+</div>

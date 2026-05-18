@@ -1,0 +1,30 @@
+<%
+  // tiny inline SVG icon set — single source of truth
+  const icons = {
+    dashboard: '<path d="M3 13h8V3H3v10Zm0 8h8v-6H3v6Zm10 0h8V11h-8v10Zm0-18v6h8V3h-8Z"/>',
+    signals:   '<path d="M3 13l4-4 4 4 6-6 4 4" stroke-linejoin="round" fill="none" stroke="currentColor" stroke-width="2"/>',
+    news:      '<path d="M4 5h13a2 2 0 0 1 2 2v11a1 1 0 0 1-1 1H4V5Zm-2 4h2v9a2 2 0 0 1-2-2V9Zm5 1h7v2H7v-2Zm0 4h7v2H7v-2Z"/>',
+    watchlist: '<path d="M12 5C7 5 3 12 3 12s4 7 9 7 9-7 9-7-4-7-9-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"/>',
+    screener:  '<path d="M4 5h16v2H4V5Zm2 5h12v2H6v-2Zm3 5h6v2H9v-2Z"/>',
+    portfolio: '<path d="M4 7h16v12H4V7Zm4-3h8v2H8V4Zm0 7h2v6H8v-6Zm4 2h2v4h-2v-4Zm4-2h2v6h-2v-6Z"/>',
+    compare:   '<path d="M9 3 4 8h3v8H4l5 5V3Zm6 18 5-5h-3V8h3l-5-5v18Z"/>',
+    backtest:  '<path d="M3 3h2v18H3V3Zm4 12h2v6H7v-6Zm4-6h2v12h-2V9Zm4 3h2v9h-2v-9Zm4-9h2v18h-2V3Z"/>',
+    alerts:    '<path d="M12 2a6 6 0 0 0-6 6v4l-2 4h16l-2-4V8a6 6 0 0 0-6-6Zm-2 18a2 2 0 0 0 4 0h-4Z"/>',
+    settings:  '<path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm9 4a8.9 8.9 0 0 0-.13-1.5l2.06-1.61-2-3.46-2.43.97a8.94 8.94 0 0 0-2.6-1.5L15.5 2h-4l-.4 2.4a8.94 8.94 0 0 0-2.6 1.5l-2.43-.97-2 3.46L6.13 10.5A9 9 0 0 0 6 12c0 .51.05 1.01.13 1.5l-2.06 1.61 2 3.46 2.43-.97a8.94 8.94 0 0 0 2.6 1.5L11.5 22h4l.4-2.4a8.94 8.94 0 0 0 2.6-1.5l2.43.97 2-3.46-2.06-1.61c.08-.49.13-.99.13-1.5Z"/>',
+    search:    '<path d="M10 4a6 6 0 1 0 3.74 10.74l4.26 4.26 1.41-1.41-4.26-4.26A6 6 0 0 0 10 4Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z"/>',
+    bell:      '<path d="M12 2a6 6 0 0 0-6 6v4l-2 4h16l-2-4V8a6 6 0 0 0-6-6Zm-2 18a2 2 0 0 0 4 0h-4Z"/>',
+    sun:       '<path d="M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10Zm0-6v3m0 16v3m9-12h-3M6 12H3m14.5-7.5-2.1 2.1M7.6 16.4l-2.1 2.1m12.9 0-2.1-2.1M7.6 7.6 5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>',
+    moon:      '<path d="M21 13a9 9 0 1 1-10-10 7 7 0 0 0 10 10Z"/>',
+    chart:     '<path d="M3 3h2v18H3V3Zm16 6h2v12h-2V9Zm-5-3h2v15h-2V6ZM9 12h2v9H9v-9Z"/>',
+    chevron:   '<path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/>',
+    menu:      '<path d="M3 6h18v2H3V6Zm0 5h18v2H3v-2Zm0 5h18v2H3v-2Z"/>',
+    plus:      '<path d="M11 5h2v6h6v2h-6v6h-2v-6H5v-2h6V5Z"/>',
+    close:     '<path d="m6 6 12 12M6 18 18 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>',
+    check:     '<path d="m5 12 5 5L20 7" stroke="currentColor" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    arrowUp:   '<path d="m6 14 6-6 6 6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    arrowDown: '<path d="m6 10 6 6 6-6" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    trash:     '<path d="M9 3h6l1 2h4v2H4V5h4l1-2Zm-3 6h12l-1 11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 9Z"/>',
+  };
+  const _size = (typeof locals !== 'undefined' && locals.size) ? locals.size : 18;
+  const _name = (typeof locals !== 'undefined' && locals.name) ? locals.name : '';
+%><svg xmlns="http://www.w3.org/2000/svg" width="<%= _size %>" height="<%= _size %>" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><%- icons[_name] || '' %></svg>

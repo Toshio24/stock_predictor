@@ -1,0 +1,37 @@
+<%
+  var s = signal;
+  var scoreClass = s.score >= 80 ? 'high' : s.score >= 60 ? 'med' : 'low';
+  var changeClass = s.change >= 0 ? 'text-bull' : 'text-bear';
+  var changeSymbol = s.change >= 0 ? '▲' : '▼';
+%>
+<a href="/ticker/<%= s.ticker %>" class="signal-card glass-card <%= s.signal %> block">
+  <div class="flex items-center justify-between mb-3">
+    <div class="flex items-center gap-2">
+      <span class="ticker-badge"><%= s.ticker %></span>
+      <span class="sentiment-badge <%= s.signal %>"><%= s.signal.toUpperCase() %></span>
+    </div>
+    <span class="score-badge <%= scoreClass %>"><%= s.score %></span>
+  </div>
+
+  <div class="text-[13px] mb-1 truncate" style="color: var(--text-muted);"><%= s.name %></div>
+
+  <div class="flex items-end justify-between gap-3 mb-3">
+    <div>
+      <div class="num text-2xl font-bold" style="color: var(--text-strong);">$<%= s.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) %></div>
+      <div class="num text-[13px] font-semibold <%= changeClass %>"><%= changeSymbol %> <%= Math.abs(s.change).toFixed(2) %>%</div>
+    </div>
+    <div class="w-24 h-12">
+      <%- include('sparkline', { points: s.spark, variant: s.signal }) %>
+    </div>
+  </div>
+
+  <div>
+    <div class="flex items-center justify-between text-[11px] mb-1.5" style="color: var(--text-muted);">
+      <span>Confidence</span>
+      <span class="num font-semibold"><%= s.confidence %>%</span>
+    </div>
+    <div class="confidence-bar">
+      <span style="width: <%= s.confidence %>%;"></span>
+    </div>
+  </div>
+</a>

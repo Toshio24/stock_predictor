@@ -1,0 +1,40 @@
+<div class="auth-card">
+  <div class="flex items-center gap-3 mb-6">
+    <div class="brand-square"><%- include('../partials/icon', { name: 'chart', size: 18 }) %></div>
+    <div>
+      <div class="text-[16px] font-bold">Signal</div>
+      <div class="text-[10px] uppercase tracking-widest opacity-60">AI Trading</div>
+    </div>
+  </div>
+
+  <h1 class="text-[22px] font-bold mb-1">Welcome back</h1>
+  <p class="text-[13px] opacity-70 mb-6">Log in to access your signals dashboard.</p>
+
+  <form data-auth="login" class="space-y-4">
+    <div>
+      <label class="text-[12px] font-medium mb-1.5 block">Email</label>
+      <input name="email" type="email" required class="glass-input" placeholder="you@company.com" />
+    </div>
+    <div>
+      <div class="flex items-center justify-between mb-1.5">
+        <label class="text-[12px] font-medium">Password</label>
+        <a href="/forgot-password" class="text-[11px] font-medium" style="color: var(--accent);">Forgot?</a>
+      </div>
+      <input name="password" type="password" required class="glass-input" placeholder="••••••••" />
+    </div>
+    <button type="submit" class="glass-button primary w-full justify-center" style="padding: 12px;">Log in</button>
+  </form>
+
+  <div class="flex items-center gap-3 my-5">
+    <div class="flex-1 h-px opacity-20" style="background: currentColor;"></div>
+    <span class="text-[11px] opacity-60">or</span>
+    <div class="flex-1 h-px opacity-20" style="background: currentColor;"></div>
+  </div>
+
+  <button class="glass-button w-full justify-center mb-2" style="padding: 11px;">Continue with Google</button>
+  <button class="glass-button w-full justify-center" style="padding: 11px;">Continue with Apple</button>
+
+  <p class="text-[12px] text-center mt-6 opacity-70">
+    No account? <a href="/signup" style="color: var(--accent);" class="font-medium">Sign up</a>
+  </p>
+</div>

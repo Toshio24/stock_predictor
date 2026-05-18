@@ -1,0 +1,36 @@
+<aside id="sidebar" class="sidebar glass-nav flex flex-col py-4 px-3 sticky top-0 h-screen z-40">
+  <!-- Brand -->
+  <div class="flex items-center gap-3 px-2 mb-6">
+    <div class="brand-square">
+      <%- include('icon', { name: 'chart', size: 18 }) %>
+    </div>
+    <div class="brand-text">
+      <div class="text-[15px] font-bold tracking-tight" style="color: var(--text-strong);">Signal</div>
+      <div class="text-[10px] uppercase tracking-widest" style="color: var(--text-muted);">AI Trading</div>
+    </div>
+    <button id="sidebar-collapse" class="ml-auto p-1.5 rounded-md hover:bg-white/10 transition" style="color: var(--text-muted);" aria-label="Collapse sidebar">
+      <%- include('icon', { name: 'chevron', size: 14 }) %>
+    </button>
+  </div>
+
+  <!-- Nav -->
+  <nav class="flex-1 flex flex-col gap-1 overflow-y-auto">
+    <% nav.forEach(function(item) { %>
+      <a href="<%= item.href %>" class="nav-item <%= currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href)) ? 'active' : '' %>">
+        <%- include('icon', { name: item.icon, size: 18 }) %>
+        <span class="nav-label"><%= item.label %></span>
+      </a>
+    <% }); %>
+  </nav>
+
+  <!-- User -->
+  <div class="glass-card mt-4 px-3 py-2.5 flex items-center gap-3">
+    <div class="w-9 h-9 rounded-full bg-gradient-to-br from-accent to-purple-500 grid place-items-center text-white text-xs font-bold flex-shrink-0">
+      <%= user.initials %>
+    </div>
+    <div class="sidebar-user-text min-w-0">
+      <div class="text-[13px] font-semibold truncate" style="color: var(--text-strong);"><%= user.name %></div>
+      <div class="text-[11px] truncate" style="color: var(--text-muted);"><%= user.email %></div>
+    </div>
+  </div>
+</aside>

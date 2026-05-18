@@ -1,0 +1,48 @@
+<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+  <div>
+    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);">Watchlist</h1>
+    <p class="text-[14px]" style="color: var(--text-muted);"><%= watchlist.length %> symbols you're tracking.</p>
+  </div>
+  <div class="flex gap-2">
+    <button class="glass-button">Import</button>
+    <button class="glass-button primary">+ Add symbol</button>
+  </div>
+</div>
+
+<div class="flex gap-1.5 mb-4">
+  <button class="glass-tab active">All</button>
+  <button class="glass-tab">Bullish</button>
+  <button class="glass-tab">Bearish</button>
+  <button class="glass-tab">Recently added</button>
+</div>
+
+<div class="glass-table">
+  <table class="w-full">
+    <thead>
+      <tr>
+        <th>Ticker</th>
+        <th>Name</th>
+        <th class="text-right">Price</th>
+        <th class="text-right">Change</th>
+        <th class="text-right">Score</th>
+        <th>Signal</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% watchlist.forEach(function(w) { %>
+        <tr>
+          <td><a href="/ticker/<%= w.ticker %>" class="ticker-badge"><%= w.ticker %></a></td>
+          <td style="color: var(--text);"><%= w.name %></td>
+          <td class="num text-right" style="color: var(--text-strong);">$<%= w.price.toFixed(2) %></td>
+          <td class="num text-right font-semibold <%= w.change >= 0 ? 'text-bull' : 'text-bear' %>">
+            <%= w.change >= 0 ? '+' : '' %><%= w.change.toFixed(2) %>%
+          </td>
+          <td class="num text-right"><span class="score-badge <%= w.score >= 80 ? 'high' : w.score >= 60 ? 'med' : 'low' %>"><%= w.score %></span></td>
+          <td><span class="sentiment-badge <%= w.signal %>"><%= w.signal %></span></td>
+          <td class="text-right"><button class="glass-tab">Remove</button></td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+</div>
