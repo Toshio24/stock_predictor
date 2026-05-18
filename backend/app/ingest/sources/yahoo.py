@@ -35,23 +35,65 @@ def _parse_entry(entry, symbol: str) -> RawArticle | None:
     )
 
 
+# Yahoo 404s requests without a "real" User-Agent. Our primary UA is fine
+# today, but Yahoo has tightened gating before — if it changes again, we
+# transparently retry once with a browser UA, and log loudly so it shows up.
+PRIMARY_UA = "Signal/0.1 (news ingestion)"
+FALLBACK_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) RSS/1.0"
+)
+
+
 class YahooFinanceRSS:
     name = "yahoo"
     cadence_seconds = 90
     URL = "https://feeds.finance.yahoo.com/rss/2.0/headline?s={symbol}&region=US&lang=en-US"
-    HEADERS = {"User-Agent": "Signal/0.1 (news ingestion)"}
+
+    def __init__(self) -> None:
+        # Sticky flag: once Yahoo starts blocking PRIMARY_UA we stay on the
+        # fallback until process restart. Avoids paying the 404 on every call.
+        self._ua = PRIMARY_UA
+        self._fallback_active = False
+
+    async def _get(self, url: str, ua: str) -> httpx.Response:
+        async with httpx.AsyncClient(timeout=8.0, headers={"User-Agent": ua}) as c:
+            return await c.get(url)
 
     async def fetch_per_ticker(self, symbol: str) -> Iterable[RawArticle]:
         url = self.URL.format(symbol=symbol)
         try:
-            async with httpx.AsyncClient(timeout=8.0, headers=self.HEADERS) as c:
-                r = await c.get(url)
-                r.raise_for_status()
-            parsed = await asyncio.to_thread(feedparser.parse, r.content)
-        except (httpx.HTTPError, Exception) as e:
-            log.warning(f"yahoo[{symbol}] fetch failed: {e}")
+            r = await self._get(url, self._ua)
+        except httpx.HTTPError as e:
+            log.warning(f"yahoo[{symbol}] network error: {e}")
             return []
-        out = []
+
+        if r.status_code == 404 and not self._fallback_active:
+            log.error(
+                f"yahoo HTTP 404 with UA={self._ua!r} — Yahoo may have tightened "
+                "their User-Agent gating. Retrying with browser UA; consider "
+                "updating PRIMARY_UA in sources/yahoo.py."
+            )
+            try:
+                r = await self._get(url, FALLBACK_UA)
+            except httpx.HTTPError as e:
+                log.warning(f"yahoo[{symbol}] fallback retry failed: {e}")
+                return []
+            if r.status_code == 200:
+                self._ua = FALLBACK_UA
+                self._fallback_active = True
+
+        if r.status_code != 200:
+            log.warning(f"yahoo[{symbol}] HTTP {r.status_code}; skipping")
+            return []
+
+        try:
+            parsed = await asyncio.to_thread(feedparser.parse, r.content)
+        except Exception as e:
+            log.warning(f"yahoo[{symbol}] parse error: {e}")
+            return []
+
+        out: list[RawArticle] = []
         for e in parsed.entries[:20]:
             if (a := _parse_entry(e, symbol)) is not None:
                 out.append(a)
