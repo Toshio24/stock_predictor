@@ -5,3 +5,13 @@ node_modules/
 .DS_Store
 dist/
 .cache/
+
+# python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

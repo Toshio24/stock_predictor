@@ -1,6 +1,7 @@
 const express = require('express');
 const path = require('path');
 const mock = require('./data/mock');
+const api = require('./data/api');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -25,7 +26,7 @@ app.use((req, res, next) => {
     { href: '/alerts', label: 'Alerts', icon: 'alerts' },
     { href: '/settings', label: 'Settings', icon: 'settings' },
   ];
-  res.locals.user = { name: 'Aizen', email: 'aizen@sondrdesigns.com', initials: 'AS' };
+  res.locals.user = { name: 'Toshi Nagai', email: 'test@gmail.com', initials: 'TN' };
   res.locals.marketStatus = mock.marketStatus();
   res.locals.notifications = mock.notifications;
   res.locals.currentPath = req.path;
@@ -41,55 +42,58 @@ const render = (view, title, extras = {}) => (req, res) => {
   });
 };
 
-// dashboard
-app.get('/', (req, res) => {
+// dashboard — live signals + news, mock for index carousel/sectors/accuracy until backend has those.
+app.get('/', async (req, res) => {
+  const [signals, news] = await Promise.all([api.getSignals(), api.getNews(20)]);
   res.render('layouts/main', {
     view: 'pages/dashboard',
     title: 'Dashboard',
     page: 'dashboard',
     indices: mock.indices,
-    signals: mock.signals.slice(0, 6),
-    news: mock.news.slice(0, 8),
+    signals: signals.slice(0, 6),
+    news: news.slice(0, 8),
     watchlist: mock.watchlist,
     sectors: mock.sectors,
     accuracy: mock.accuracy,
   });
 });
 
-// signals explorer
-app.get('/signals', (req, res) => {
+// signals explorer — live
+app.get('/signals', async (req, res) => {
+  const signals = await api.getSignals();
   res.render('layouts/main', {
     view: 'pages/signals',
     title: 'Signals',
     page: 'signals',
-    signals: mock.signals,
+    signals,
   });
 });
 
-// ticker detail
-app.get('/ticker/:symbol', (req, res) => {
+// ticker detail — live signal + live news for the symbol
+app.get('/ticker/:symbol', async (req, res) => {
   const symbol = req.params.symbol.toUpperCase();
-  const signal = mock.signals.find((s) => s.ticker === symbol) || mock.signals[0];
+  const data = await api.getTicker(symbol);
   res.render('layouts/main', {
     view: 'pages/ticker',
     title: symbol,
     page: 'ticker',
     symbol,
-    signal,
-    news: mock.news.filter((n) => n.tickers.includes(symbol)).concat(mock.news).slice(0, 6),
-    history: mock.priceHistory(symbol),
-    fundamentals: mock.fundamentals(symbol),
+    signal: data.signal,
+    news: data.news,
+    history: data.history,
+    fundamentals: data.fundamentals,
   });
 });
 
-// news feed
-app.get('/news', (req, res) => {
+// news feed — live
+app.get('/news', async (req, res) => {
+  const news = await api.getNews(40);
   res.render('layouts/main', {
     view: 'pages/news',
     title: 'News',
     page: 'news',
-    news: mock.news,
-    breaking: mock.news[0],
+    news,
+    breaking: news[0] || mock.news[0],
   });
 });
 
@@ -112,19 +116,17 @@ app.get('/forgot-password', renderAuth('forgot-password', 'Reset password'));
 app.get('/onboarding', renderAuth('onboarding', 'Welcome'));
 
 // mock auth endpoints (localStorage handles state client-side)
-app.post('/api/auth/login', (req, res) => res.json({ ok: true, user: { name: 'Aizen', email: req.body.email } }));
+app.post('/api/auth/login', (req, res) => res.json({ ok: true, user: { name: 'Toshi Nagai', email: req.body.email } }));
 app.post('/api/auth/signup', (req, res) => res.json({ ok: true, user: { name: req.body.name || 'New User', email: req.body.email } }));
 
-// search
-app.get('/api/search', (req, res) => {
-  const q = (req.query.q || '').toLowerCase().trim();
+// search — proxies to backend, falls back to local
+app.get('/api/search', async (req, res) => {
+  const q = (req.query.q || '').trim();
   if (!q) return res.json({ tickers: [], pages: [] });
-  const tickers = mock.signals
-    .filter((s) => s.ticker.toLowerCase().includes(q) || s.name.toLowerCase().includes(q))
-    .slice(0, 5)
-    .map((s) => ({ ticker: s.ticker, name: s.name, signal: s.signal, score: s.score }));
-  const pages = res.locals.nav.filter((n) => n.label.toLowerCase().includes(q)).slice(0, 4);
-  res.json({ tickers, pages });
+  const live = await api.search(q);
+  // Augment with local page matches (frontend nav).
+  const pages = res.locals.nav.filter((n) => n.label.toLowerCase().includes(q.toLowerCase())).slice(0, 4);
+  res.json({ tickers: live.tickers || [], pages });
 });
 
 // 404
@@ -138,4 +140,5 @@ app.use((req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Signal running → http://localhost:${PORT}`);
+  console.log(`Backend → ${process.env.BACKEND_URL || 'http://localhost:8000'} (falls back to mock if offline)`);
 });
