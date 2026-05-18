@@ -23,38 +23,105 @@ class ClassifierOutput(BaseModel):
         "earnings", "guidance", "fda", "legal", "executive",
         "macro", "product", "partnership", "regulatory", "other", "none"
     ]
+    is_material: bool = Field(
+        ...,
+        description="True only if this article carries actionable, new "
+                    "information that a rational investor would consider "
+                    "moving the price. False for round-ups, SEO listicles, "
+                    "opinion pieces, rehashes of old news, generic social "
+                    "posts, and tangential mentions.",
+    )
+    time_horizon: Literal["intraday", "short_term", "medium_term", "long_term", "none"] = Field(
+        ...,
+        description="Over what window does this news matter? Use 'none' "
+                    "for non-material articles.",
+    )
     rationale: str = Field(..., max_length=400)
 
 
-SYSTEM_PROMPT = """You are a financial-news sentiment classifier.
+SYSTEM_PROMPT = """You are a financial-news sentiment classifier whose
+output feeds a trading-signal aggregator. Your job has two equally
+important parts: judging direction AND judging whether the article
+carries any signal at all.
 
-You receive a single news headline (plus a short summary, if available) about a
-publicly traded company, and you return a structured assessment of how the
-news affects that ticker's near-term price expectation.
+You receive a single news article (headline + optional summary) about a
+publicly traded company, and you return a structured assessment.
 
-GUIDELINES
-- "bullish" means the news is likely to support a higher near-term price.
-  Examples: earnings beat, raised guidance, FDA approval, product launch,
-  large new contract, favorable regulatory ruling.
-- "bearish" means the news is likely to drag the near-term price.
-  Examples: earnings miss, lowered guidance, recall, lawsuit, executive
-  departure under bad terms, downgrade, fraud allegation.
-- "neutral" means the headline carries no clear directional signal, or is
-  routine corporate information (dividend announcement on schedule, minor
-  reshuffle, vague PR copy with no facts).
-- "sentiment_score" should be calibrated: a clear earnings beat is +0.6 to
-  +0.9; a vague mention is closer to 0; a confirmed major lawsuit is −0.7
-  or worse. Reserve |score| > 0.85 for very high-conviction events.
-- "confidence" is your meta-uncertainty — lower it when the headline is
-  ambiguous, sarcastic, or you only see a fragment.
-- "event_type" is the dominant category of the news; pick "none" for pure
-  market commentary.
+# DIRECTION (sentiment_label, sentiment_score)
+- "bullish" — likely to support a higher near-term price. Examples:
+  earnings beat, raised guidance, FDA approval, product launch, large
+  new contract, favorable regulatory ruling.
+- "bearish" — likely to drag the near-term price. Examples: earnings
+  miss, lowered guidance, recall, lawsuit, executive departure under
+  bad terms, downgrade, fraud allegation, going-concern doubt.
+- "neutral" — no clear directional read, or routine corporate filing.
+- Calibrate sentiment_score:
+  - A clear earnings beat is +0.6 to +0.9
+  - A confirmed major lawsuit is −0.7 or worse
+  - A vague mention is closer to 0
+  - Reserve |score| > 0.85 for very high-conviction events
+
+# MATERIALITY (is_material) — be strict here
+Set is_material=true ONLY if the article carries actionable, NEW
+information that a rational investor would price in.
+
+Set is_material=false (the default for most low-quality content) for:
+- Round-ups and listicles: "3 AI stocks to watch", "Top 5 dividend
+  picks", "Better Buy: X or Y"
+- Opinion / commentary with no new facts ("Why I'm still bullish on X")
+- Old news being re-summarized ("Last week's earnings show…")
+- Generic explainers ("Here's why X stock has been volatile")
+- Analyst hot-takes without an actual rating change ("Analyst is
+  cautiously optimistic on X")
+- Routine SEC filings that aren't material events: bylaw amendments,
+  Form 4 insider sales below 1% of holdings, prospectus supplements,
+  ARS auction rate notices
+- Tangential mentions: the article is about Y but parenthetically
+  names X
+- Social-media questions ("is NVDA going to tank?"), memes, low-effort
+  speculation
+- Repeated coverage of the same event already classified (you can't
+  see history, but if the headline is generic-sounding and lacks
+  concrete numbers/specifics, lean toward false)
+
+Set is_material=true for things like:
+- Earnings reports with actual numbers
+- Guidance revisions
+- M&A announcements
+- Regulatory rulings (FDA, DoJ, antitrust, court orders)
+- Material SEC filings: 8-K material events, 10-Q, 10-K, 13-D activist
+  stakes
+- Major contracts, customer wins, or losses
+- Executive changes at C-suite level
+- Plant fires, recalls, breaches, major operational disruptions
+
+When is_material=false, you must still return a sentiment_label
+(usually "neutral") and a low confidence (≤ 0.3), because the
+aggregator downstream filters non-material analyses out — your job
+is just to flag the noise.
+
+# TIME HORIZON
+- "intraday" — moves the price today (breaking news, real-time guidance)
+- "short_term" — days to a few weeks (earnings, contract wins)
+- "medium_term" — months (strategic shift, regulatory ruling)
+- "long_term" — quarters+ (industry trend, leadership change)
+- "none" — pair with is_material=false
+
+# CONFIDENCE
+Lower confidence when:
+- The headline is ambiguous or sarcastic
+- You only see a fragment
+- The article is from a low-quality source (random Motley Fool, Reddit
+  post, anonymous blog)
+- The article is non-material — cap confidence at 0.3
+
+# HARD RULES
+- Do NOT speculate beyond the text. "Apple denies rumor of layoffs"
+  does NOT mean layoffs are happening.
+- Do NOT hallucinate numbers (prices, percentages) that aren't in the
+  text.
 - "rationale" is one or two short sentences explaining your call.
-- Do NOT speculate beyond the text. If the headline says "Apple denies
-  rumor about layoffs", do not infer that layoffs are happening.
-- Do NOT hallucinate numbers (prices, percentages) that aren't in the text.
-
-Return ONLY the structured JSON the schema requires."""
+- Return ONLY the structured JSON the schema requires."""
 
 
 _settings = get_settings()

@@ -66,6 +66,8 @@ class LlmAnalysis(Base):
     sentiment_label = Column(String(20))         # bullish | bearish | neutral
     confidence = Column(Numeric(4, 3))           # 0.000 .. 1.000
     event_type = Column(String(50))
+    is_material = Column(Boolean, nullable=True, index=True)  # null = legacy row, treat as material
+    time_horizon = Column(String(20), nullable=True)
     rationale = Column(Text)
     key_factors = Column(JSON)
     latency_ms = Column(Integer)

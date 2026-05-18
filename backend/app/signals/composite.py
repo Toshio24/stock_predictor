@@ -30,8 +30,15 @@ def compute_for_ticker(db: Session, ticker_id: int) -> CompositeSignal | None:
 
     rows = db.execute(
         select(LlmAnalysis.sentiment_score, LlmAnalysis.confidence, LlmAnalysis.created_at,
-               LlmAnalysis.sentiment_label, LlmAnalysis.rationale)
-        .where(LlmAnalysis.ticker_id == ticker_id, LlmAnalysis.created_at >= cutoff)
+               LlmAnalysis.sentiment_label, LlmAnalysis.rationale, LlmAnalysis.is_material)
+        .where(
+            LlmAnalysis.ticker_id == ticker_id,
+            LlmAnalysis.created_at >= cutoff,
+            # Treat NULL (legacy rows) as material for backward compat; exclude
+            # only the explicitly-flagged noise so listicles/round-ups/Reddit
+            # questions don't dilute the average.
+            (LlmAnalysis.is_material.is_(None)) | (LlmAnalysis.is_material.is_(True)),
+        )
         .order_by(LlmAnalysis.created_at.desc())
     ).all()
 
@@ -44,7 +51,7 @@ def compute_for_ticker(db: Session, ticker_id: int) -> CompositeSignal | None:
     confidences = []
     latest_rationale = rows[0].rationale
 
-    for score, conf, ts, _label, _r in rows:
+    for score, conf, ts, _label, _r, _mat in rows:
         age = (now - ts).total_seconds() / 3600
         w = _weight(age) * float(conf or 0.5)
         weighted_sum += float(score or 0) * w

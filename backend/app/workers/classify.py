@@ -65,6 +65,8 @@ def _persist(article_payload: dict, ticker_id: int, parsed, meta: dict) -> None:
             sentiment_label=parsed.sentiment_label,
             confidence=Decimal(str(round(parsed.confidence, 3))),
             event_type=parsed.event_type,
+            is_material=parsed.is_material,
+            time_horizon=parsed.time_horizon,
             rationale=parsed.rationale,
             latency_ms=meta["latency_ms"],
             input_tokens=meta["input_tokens"],
@@ -120,10 +122,12 @@ async def run() -> None:
 
                 _persist(article_payload, ticker_id, parsed, meta)
                 daily_cost += meta["cost_usd"]
+                mat_flag = "MAT" if parsed.is_material else "noise"
                 log.info(
                     f"[{ticker_info['symbol']}] {parsed.sentiment_label} "
                     f"score={parsed.sentiment_score:+.2f} conf={parsed.confidence:.2f} "
-                    f"cache_read={meta['cache_read_tokens']} cost=${meta['cost_usd']:.5f}"
+                    f"{mat_flag} horizon={parsed.time_horizon} "
+                    f"cost=${meta['cost_usd']:.5f}"
                 )
 
         log.info(f"running cost since worker start: ${daily_cost:.4f}")
