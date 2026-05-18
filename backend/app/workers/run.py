@@ -4,7 +4,7 @@ later if any worker needs its own scaling envelope."""
 import asyncio
 import logging
 
-from app.workers import ingest_news, classify, quotes, composite
+from app.workers import ingest_news, classify, quotes, composite, prices
 
 
 async def main() -> None:
@@ -16,6 +16,7 @@ async def main() -> None:
         ingest_news.run(),
         classify.run(),
         quotes.run(),
+        prices.run(),
         composite.run(),
     )
 

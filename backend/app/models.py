@@ -1,6 +1,6 @@
 from datetime import datetime
 from sqlalchemy import (
-    Column, Integer, String, Text, DateTime, Numeric, Boolean,
+    Column, Integer, BigInteger, String, Text, DateTime, Numeric, Boolean,
     ForeignKey, UniqueConstraint, Index, JSON
 )
 from sqlalchemy.orm import relationship
@@ -110,6 +110,21 @@ class Quote(Base):
     ticker = relationship("Ticker", back_populates="quotes")
 
 
+class DailyBar(Base):
+    """Daily OHLCV bar, one row per (ticker, date). TimescaleDB hypertable
+    on `bar_date`. Pulled from Yahoo's chart API; no API key required."""
+    __tablename__ = "daily_bars"
+
+    ticker_id = Column(Integer, ForeignKey("tickers.id", ondelete="CASCADE"), primary_key=True)
+    bar_date = Column(DateTime(timezone=True), primary_key=True)
+    open = Column(Numeric(12, 4))
+    high = Column(Numeric(12, 4))
+    low = Column(Numeric(12, 4))
+    close = Column(Numeric(12, 4))
+    volume = Column(BigInteger)
+
+
 Index("ix_articles_published_desc", Article.published_at.desc())
 Index("ix_composite_ticker_time", CompositeSignal.ticker_id, CompositeSignal.computed_at.desc())
 Index("ix_llm_ticker_time", LlmAnalysis.ticker_id, LlmAnalysis.created_at.desc())
+Index("ix_daily_bars_ticker_date", DailyBar.ticker_id, DailyBar.bar_date.desc())
