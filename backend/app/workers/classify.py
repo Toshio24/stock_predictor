@@ -12,6 +12,7 @@ from app.config import get_settings
 from app.db import session_scope
 from app.models import Article, ArticleTicker, LlmAnalysis, Ticker
 from app.llm.client import classify_article
+from app.ingest.prefilter import is_obvious_noise
 
 log = logging.getLogger(__name__)
 _settings = get_settings()
@@ -53,6 +54,32 @@ def _claim_batch() -> list[tuple[Article, list[tuple[int, Ticker]]]]:
                 [(tid, {"symbol": t.symbol, "name": t.name, "sector": t.sector}) for tid, t in links],
             ))
         return batch
+
+
+def _persist_prefilter(article_payload: dict, ticker_id: int) -> None:
+    """Write a synthetic LlmAnalysis for an article the pre-filter caught,
+    so it stops showing up in the unclassified queue. No LLM cost."""
+    with session_scope() as db:
+        analysis = LlmAnalysis(
+            article_id=article_payload["id"],
+            ticker_id=ticker_id,
+            model_used="prefilter",
+            sentiment_score=Decimal("0.000"),
+            sentiment_label="neutral",
+            confidence=Decimal("0.100"),
+            event_type="none",
+            is_material=False,
+            time_horizon="none",
+            rationale="Pre-filtered as obvious noise (listicle, opinion, or social question).",
+            latency_ms=0,
+            input_tokens=0,
+            output_tokens=0,
+            cost_usd=Decimal("0.000000"),
+        )
+        db.add(analysis)
+        db.execute(
+            update(Article).where(Article.id == article_payload["id"]).values(is_classified=True)
+        )
 
 
 def _persist(article_payload: dict, ticker_id: int, parsed, meta: dict) -> None:
@@ -98,6 +125,15 @@ async def run() -> None:
             continue
 
         for article_payload, ticker_links in batch:
+            # Cheap pre-filter — drop obvious noise before paying for Claude.
+            if is_obvious_noise(article_payload["headline"]):
+                for ticker_id, _ti in ticker_links:
+                    _persist_prefilter(article_payload, ticker_id)
+                log.info(
+                    f"[prefilter] dropped as noise: {article_payload['headline'][:80]}"
+                )
+                continue
+
             for ticker_id, ticker_info in ticker_links:
                 try:
                     parsed, meta = await asyncio.to_thread(
