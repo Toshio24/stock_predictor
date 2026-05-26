@@ -1,0 +1,11 @@
+# Backend deploys to Railway, not Vercel — keep it out of the bundle.
+backend/
+
+# Local-only files that don't belong in the Vercel deployment.
+.env
+.env.*
+*.pem
+*.key
+.pre-commit-config.yaml
+SECURITY.md
+DEPLOYMENT.md
