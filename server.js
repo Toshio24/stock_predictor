@@ -325,7 +325,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Internal server error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Signal running → http://localhost:${PORT}`);
-  console.log(`Backend → ${process.env.BACKEND_URL || 'http://localhost:8000'} (falls back to mock if offline)`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Signal running → http://localhost:${PORT}`);
+    console.log(`Backend → ${process.env.BACKEND_URL || 'http://localhost:8000'} (falls back to mock if offline)`);
+  });
+}
+
+module.exports = app;
