@@ -26,9 +26,20 @@ def upgrade() -> None:
         sa.Column("volume", sa.BigInteger),
     )
     op.create_index("ix_daily_bars_ticker_date", "daily_bars", ["ticker_id", sa.text("bar_date DESC")])
-    # Hypertable for time-series queries
+    # Hypertable for time-series queries — only if TimescaleDB is installed.
+    # On vanilla Postgres (Railway/Supabase/etc) this no-ops and daily_bars
+    # stays a regular table. Query patterns work either way; partitioning
+    # is a performance optimization that doesn't matter at v1 row counts.
     op.execute(
-        "SELECT create_hypertable('daily_bars', 'bar_date', if_not_exists => TRUE, migrate_data => TRUE)"
+        """
+        DO $$
+        BEGIN
+            PERFORM create_hypertable('daily_bars', 'bar_date', if_not_exists => TRUE, migrate_data => TRUE);
+        EXCEPTION WHEN undefined_function THEN
+            RAISE NOTICE 'TimescaleDB not available — daily_bars stays as a regular table.';
+        END
+        $$;
+        """
     )
 
 

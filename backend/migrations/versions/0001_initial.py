@@ -15,8 +15,21 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # TimescaleDB extension (no-op if already present)
-    op.execute("CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE")
+    # TimescaleDB extension — optional. Some managed Postgres hosts (Railway,
+    # Supabase, RDS without the timescale parameter group) don't ship the
+    # extension. We try to enable it; if unavailable, daily_bars stays a
+    # regular table (see 0003_daily_bars.py).
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            CREATE EXTENSION IF NOT EXISTS timescaledb CASCADE;
+        EXCEPTION WHEN feature_not_supported OR undefined_file THEN
+            RAISE NOTICE 'TimescaleDB not available on this Postgres — continuing without it.';
+        END
+        $$;
+        """
+    )
 
     op.create_table(
         "tickers",
