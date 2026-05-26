@@ -2,7 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "buildCommand": "echo 'no build — Express SSR'",
-  "outputDirectory": "public",
   "rewrites": [
     { "source": "/(.*)", "destination": "/server.js" }
   ],
