@@ -27,3 +27,7 @@ EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
     CMD curl -fsS http://localhost:8000/healthz || exit 1
+
+# Default to running the API. docker-compose overrides this with --reload
+# for dev, and the worker service overrides it with `python -m app.workers.run`.
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
