@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
+  <script src="https://cdn.tailwindcss.com" nonce="<%= cspNonce %>"></script>
+  <script nonce="<%= cspNonce %>">
     tailwind.config = {
       darkMode: 'class',
       theme: {
@@ -48,7 +48,7 @@
 
   <div id="toast-host"></div>
 
-  <script src="/js/sparkline.js"></script>
-  <script src="/js/app.js"></script>
+  <script src="/js/sparkline.js" nonce="<%= cspNonce %>"></script>
+  <script src="/js/app.js" nonce="<%= cspNonce %>"></script>
 </body>
 </html>

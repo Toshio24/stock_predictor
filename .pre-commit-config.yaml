@@ -1,0 +1,41 @@
+# Pre-commit hooks. Install once:
+#   pip install pre-commit && pre-commit install
+# Runs automatically on every `git commit`. The secret-scan hook is the
+# critical one — it blocks the commit if it sees anything that looks like
+# an API key, even in a file you didn't think to add to .gitignore.
+
+repos:
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args: ["--baseline", ".secrets.baseline"]
+        exclude: |
+          (?x)^(
+            package-lock\.json|
+            backend/backtest_trades\.csv|
+            .*\.lock|
+            node_modules/.*
+          )$
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=2048"]
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-json
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: detect-private-key
+      - id: forbid-submodules
+      - id: no-commit-to-branch
+        args: ["--branch", "main"]
+        # Comment this hook out once you start landing PRs through the
+        # normal flow; it's a guardrail for the early solo phase.
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.21.2
+    hooks:
+      - id: gitleaks

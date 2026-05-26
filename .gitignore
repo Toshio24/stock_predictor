@@ -1,17 +1,72 @@
 node_modules/
-.env
-.env.local
-*.log
 .DS_Store
 dist/
 .cache/
+*.log
+*.tmp
+*.swp
 
-# python
+# ---------------------------------------------------------------------------
+# Secrets — never commit anything that smells like an env file or a key.
+# We're paranoid here on purpose: the user has explicit instructions that
+# this project must never leak the Anthropic / Finnhub / Firebase keys.
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.keystore
+service-account*.json
+firebase-adminsdk*.json
+gcp-service-account*.json
+*-credentials.json
+secrets/
+.secrets/
+.envrc
+
+# detect-secrets baseline keeps known false positives; this is checked in,
+# but you still get scanned on every commit by the pre-commit hook.
+.secrets.baseline
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
 __pycache__/
 *.pyc
 *.pyo
+*.pyd
 .venv/
 venv/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ---------------------------------------------------------------------------
+# Editor / OS
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+*.iml
+Thumbs.db
+
+# ---------------------------------------------------------------------------
+# Build artefacts
+# ---------------------------------------------------------------------------
+backend/backtest_trades.csv
+backend/*.csv
+*.sqlite3
+*.db
+
+# ---------------------------------------------------------------------------
+# Vercel / deploy
+# ---------------------------------------------------------------------------
+.vercel/
+.next/

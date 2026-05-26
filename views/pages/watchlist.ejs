@@ -1,48 +1,259 @@
-<div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+<%
+  // Sort: active first, then by symbol. Group by sector for section headers.
+  // `tickers` is the full universe (active + inactive) returned by
+  // GET /api/v1/tickers?include_inactive=true, with a mock fallback when
+  // the backend is offline.
+  const list = (tickers || []).slice().sort(function (a, b) {
+    if (a.is_active !== b.is_active) return a.is_active ? -1 : 1;
+    return (a.symbol || '').localeCompare(b.symbol || '');
+  });
+  const activeCount = list.filter(function (t) { return t.is_active; }).length;
+  const totalCount = list.length;
+  const sectors = Array.from(new Set(list.map(function (t) { return t.sector || 'Other'; }))).sort();
+%>
+
+<div class="flex items-center justify-between mb-2 flex-wrap gap-3">
   <div>
-    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);">Watchlist</h1>
-    <p class="text-[14px]" style="color: var(--text-muted);"><%= watchlist.length %> symbols you're tracking.</p>
+    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);">My Tickers</h1>
+    <p class="text-[14px]" style="color: var(--text-muted);">
+      Pick what to track — the workers only spend API credits on active tickers.
+    </p>
   </div>
-  <div class="flex gap-2">
-    <button class="glass-button">Import</button>
-    <button class="glass-button primary">+ Add symbol</button>
+  <div class="flex items-center gap-3 flex-wrap">
+    <div class="text-[13px] glass-card px-4 py-2.5">
+      <span class="font-bold tabular-nums" style="color: var(--text-strong);"><%= activeCount %></span>
+      <span style="color: var(--text-muted);"> active / <%= totalCount %> in universe</span>
+    </div>
+    <button id="add-ticker-btn" class="glass-button primary">+ Add symbol</button>
   </div>
 </div>
 
-<div class="flex gap-1.5 mb-4">
-  <button class="glass-tab active">All</button>
-  <button class="glass-tab">Bullish</button>
-  <button class="glass-tab">Bearish</button>
-  <button class="glass-tab">Recently added</button>
+<div class="glass-card mb-4 p-3 flex items-center gap-2 flex-wrap" style="background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.25);">
+  <span style="color: var(--accent);">●</span>
+  <span class="text-[13px]" style="color: var(--text);">
+    Deactivating a ticker <strong>stops all news / Claude / Finnhub calls</strong> for it. Past data stays — reactivate any time to resume.
+  </span>
 </div>
 
-<div class="glass-table">
-  <table class="w-full">
-    <thead>
-      <tr>
-        <th>Ticker</th>
-        <th>Name</th>
-        <th class="text-right">Price</th>
-        <th class="text-right">Change</th>
-        <th class="text-right">Score</th>
-        <th>Signal</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% watchlist.forEach(function(w) { %>
-        <tr>
-          <td><a href="/ticker/<%= w.ticker %>" class="ticker-badge"><%= w.ticker %></a></td>
-          <td style="color: var(--text);"><%= w.name %></td>
-          <td class="num text-right" style="color: var(--text-strong);">$<%= w.price.toFixed(2) %></td>
-          <td class="num text-right font-semibold <%= w.change >= 0 ? 'text-bull' : 'text-bear' %>">
-            <%= w.change >= 0 ? '+' : '' %><%= w.change.toFixed(2) %>%
-          </td>
-          <td class="num text-right"><span class="score-badge <%= w.score >= 80 ? 'high' : w.score >= 60 ? 'med' : 'low' %>"><%= w.score %></span></td>
-          <td><span class="sentiment-badge <%= w.signal %>"><%= w.signal %></span></td>
-          <td class="text-right"><button class="glass-tab">Remove</button></td>
-        </tr>
-      <% }); %>
-    </tbody>
-  </table>
+<div class="flex items-center gap-2 mb-4 flex-wrap">
+  <input id="ticker-filter" type="search" placeholder="Filter by symbol or name…" class="glass-input" style="max-width: 320px;" autocomplete="off" />
+  <button class="glass-tab active" data-filter="all">All</button>
+  <button class="glass-tab" data-filter="active">Active (<%= activeCount %>)</button>
+  <button class="glass-tab" data-filter="inactive">Inactive (<%= totalCount - activeCount %>)</button>
+  <div class="ml-auto flex items-center gap-2">
+    <button id="bulk-deactivate" class="glass-tab" title="Deactivate everything visible">Deactivate visible</button>
+  </div>
 </div>
+
+<div id="ticker-board">
+  <% sectors.forEach(function (sector) { %>
+    <% const inSector = list.filter(function (t) { return (t.sector || 'Other') === sector; }); %>
+    <section class="mb-6 ticker-sector" data-sector="<%= sector %>">
+      <div class="flex items-center gap-3 mb-3">
+        <h2 class="text-[13px] font-bold uppercase tracking-widest" style="color: var(--text-muted);"><%= sector %></h2>
+        <div class="flex-1 h-px" style="background: rgba(255,255,255,0.06);"></div>
+        <span class="text-[11px]" style="color: var(--text-muted);"><%= inSector.length %></span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <% inSector.forEach(function (t) { %>
+          <div class="ticker-tile glass-card p-3 flex items-center justify-between gap-3"
+               data-symbol="<%= t.symbol %>"
+               data-name="<%= (t.name || '').toLowerCase() %>"
+               data-active="<%= t.is_active ? '1' : '0' %>"
+               style="<%= t.is_active ? '' : 'opacity: 0.55;' %>">
+            <div class="flex-1 min-w-0">
+              <a href="/ticker/<%= t.symbol %>" class="font-mono font-bold text-[14px] hover:underline" style="color: var(--text-strong);">
+                <%= t.symbol %>
+              </a>
+              <div class="text-[11.5px] truncate" style="color: var(--text-muted);"><%= t.name %></div>
+              <div class="text-[10.5px] mt-0.5" style="color: var(--text-muted);"><%= t.industry || t.exchange || '' %></div>
+            </div>
+            <label class="switch" title="<%= t.is_active ? 'Active — workers tracking this' : 'Inactive — no API calls being spent' %>">
+              <input type="checkbox" class="ticker-toggle" data-symbol="<%= t.symbol %>" <%= t.is_active ? 'checked' : '' %> />
+              <span class="slider"></span>
+            </label>
+          </div>
+        <% }); %>
+      </div>
+    </section>
+  <% }); %>
+</div>
+
+<div id="add-ticker-modal" class="modal-backdrop hidden">
+  <div class="modal-panel glass-card p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold" style="color: var(--text-strong);">Add a ticker</h3>
+      <button id="add-ticker-close" class="p-1.5 rounded hover:bg-white/10" aria-label="Close">
+        <%- include('../partials/icon', { name: 'close', size: 16 }) %>
+      </button>
+    </div>
+    <form id="add-ticker-form" class="space-y-3">
+      <div>
+        <label class="text-[12px] uppercase tracking-widest" style="color: var(--text-muted);">Symbol</label>
+        <input name="symbol" required maxlength="10" placeholder="e.g. PLTR" class="glass-input mt-1 font-mono uppercase" />
+      </div>
+      <div>
+        <label class="text-[12px] uppercase tracking-widest" style="color: var(--text-muted);">Company name</label>
+        <input name="name" required maxlength="200" placeholder="e.g. Palantir Technologies" class="glass-input mt-1" />
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-[12px] uppercase tracking-widest" style="color: var(--text-muted);">Sector</label>
+          <input name="sector" maxlength="100" placeholder="Technology" class="glass-input mt-1" />
+        </div>
+        <div>
+          <label class="text-[12px] uppercase tracking-widest" style="color: var(--text-muted);">Exchange</label>
+          <input name="exchange" maxlength="20" placeholder="NASDAQ" class="glass-input mt-1" />
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" id="add-ticker-cancel" class="glass-tab">Cancel</button>
+        <button type="submit" class="glass-button primary">Add &amp; activate</button>
+      </div>
+      <div id="add-ticker-error" class="text-[12px] hidden" style="color: var(--bear);"></div>
+    </form>
+  </div>
+</div>
+
+<script nonce="<%= cspNonce %>">
+(function () {
+  function toast(msg, ok) {
+    const host = document.getElementById('toast-host');
+    if (!host) return;
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.style.borderLeft = '3px solid ' + (ok ? 'var(--bull)' : 'var(--bear)');
+    t.textContent = msg;
+    host.appendChild(t);
+    setTimeout(function () { t.remove(); }, 3000);
+  }
+
+  function applyTileState(tile, active) {
+    tile.dataset.active = active ? '1' : '0';
+    tile.style.opacity = active ? '' : '0.55';
+  }
+
+  document.querySelectorAll('.ticker-toggle').forEach(function (input) {
+    input.addEventListener('change', async function () {
+      const symbol = input.dataset.symbol;
+      const action = input.checked ? 'activate' : 'deactivate';
+      const tile = input.closest('.ticker-tile');
+      input.disabled = true;
+      try {
+        const r = await fetch('/api/tickers/' + encodeURIComponent(symbol) + '/' + action, { method: 'POST' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        applyTileState(tile, input.checked);
+        updateCounts();
+        toast(symbol + ' ' + (input.checked ? 'activated' : 'deactivated'), input.checked);
+      } catch (e) {
+        input.checked = !input.checked;
+        toast('Failed to update ' + symbol + ' — backend offline?', false);
+      } finally {
+        input.disabled = false;
+      }
+    });
+  });
+
+  function updateCounts() {
+    const all = document.querySelectorAll('.ticker-tile');
+    const active = document.querySelectorAll('.ticker-tile[data-active="1"]').length;
+    const inactive = all.length - active;
+    const aBtn = document.querySelector('[data-filter="active"]');
+    const iBtn = document.querySelector('[data-filter="inactive"]');
+    if (aBtn) aBtn.textContent = 'Active (' + active + ')';
+    if (iBtn) iBtn.textContent = 'Inactive (' + inactive + ')';
+  }
+
+  const filterInput = document.getElementById('ticker-filter');
+  let currentMode = 'all';
+  function applyFilters() {
+    const q = (filterInput.value || '').trim().toLowerCase();
+    document.querySelectorAll('.ticker-tile').forEach(function (tile) {
+      const matchesText = !q || tile.dataset.symbol.toLowerCase().includes(q) || (tile.dataset.name || '').includes(q);
+      const isActive = tile.dataset.active === '1';
+      const matchesMode = currentMode === 'all' || (currentMode === 'active' && isActive) || (currentMode === 'inactive' && !isActive);
+      tile.style.display = (matchesText && matchesMode) ? '' : 'none';
+    });
+    document.querySelectorAll('.ticker-sector').forEach(function (sec) {
+      const anyVisible = Array.from(sec.querySelectorAll('.ticker-tile')).some(function (t) { return t.style.display !== 'none'; });
+      sec.style.display = anyVisible ? '' : 'none';
+    });
+  }
+  filterInput.addEventListener('input', applyFilters);
+  document.querySelectorAll('[data-filter]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('[data-filter]').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentMode = btn.dataset.filter;
+      applyFilters();
+    });
+  });
+
+  document.getElementById('bulk-deactivate').addEventListener('click', async function () {
+    const visible = Array.from(document.querySelectorAll('.ticker-tile')).filter(function (t) {
+      return t.style.display !== 'none' && t.dataset.active === '1';
+    });
+    if (!visible.length) return toast('Nothing to deactivate', true);
+    if (!confirm('Deactivate ' + visible.length + ' visible tickers? You can flip them back any time.')) return;
+    let ok = 0;
+    for (const tile of visible) {
+      const symbol = tile.dataset.symbol;
+      try {
+        const r = await fetch('/api/tickers/' + encodeURIComponent(symbol) + '/deactivate', { method: 'POST' });
+        if (r.ok) {
+          const input = tile.querySelector('.ticker-toggle');
+          if (input) input.checked = false;
+          applyTileState(tile, false);
+          ok += 1;
+        }
+      } catch (_) { /* ignore */ }
+    }
+    updateCounts();
+    toast('Deactivated ' + ok + ' tickers', true);
+  });
+
+  const modal = document.getElementById('add-ticker-modal');
+  const openBtn = document.getElementById('add-ticker-btn');
+  const closeBtn = document.getElementById('add-ticker-close');
+  const cancelBtn = document.getElementById('add-ticker-cancel');
+  const form = document.getElementById('add-ticker-form');
+  const errEl = document.getElementById('add-ticker-error');
+  function openModal() { modal.classList.remove('hidden'); form.symbol.focus(); }
+  function closeModal() { modal.classList.add('hidden'); errEl.classList.add('hidden'); form.reset(); }
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    errEl.classList.add('hidden');
+    const fd = new FormData(form);
+    const body = {
+      symbol: (fd.get('symbol') || '').toString().trim().toUpperCase(),
+      name: (fd.get('name') || '').toString().trim(),
+      sector: (fd.get('sector') || '').toString().trim() || undefined,
+      exchange: (fd.get('exchange') || '').toString().trim() || undefined,
+    };
+    if (!body.symbol || !body.name) {
+      errEl.textContent = 'Symbol and name are required.';
+      errEl.classList.remove('hidden');
+      return;
+    }
+    try {
+      const r = await fetch('/api/tickers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      closeModal();
+      toast(body.symbol + ' added — reloading…', true);
+      setTimeout(function () { location.reload(); }, 600);
+    } catch (e) {
+      errEl.textContent = 'Could not add — is the backend online?';
+      errEl.classList.remove('hidden');
+    }
+  });
+})();
+</script>

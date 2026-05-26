@@ -17,13 +17,20 @@ from typing import Iterable
 from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
-from app.models import DailyBar, LlmAnalysis, Quote, SignalOutcome, Ticker, CompositeSignal
+from app.models import DailyBar, LlmAnalysis, MlPrediction, Quote, SignalOutcome, Ticker, CompositeSignal
 from app.signals.technical import score_ticker as technical_score_for
+from app.signals.macro import compute as macro_overlay
+from app.signals.fundamentals import compute as fundamentals_overlay
+from app.ml.predict import predict_all as ml_predict_all
 
 
 # Component weights — sum to 1.0. Easy knob to retune later.
 W_SENTIMENT = 0.6
 W_TECHNICAL = 0.4
+
+# Overlay caps — macro and fundamentals each contribute at most ±0.15 / ±0.10
+# to the final score (already clamped inside their compute() funcs). They
+# adjust the score AFTER blending so a strong tech+news signal stays strong.
 
 
 # Time-decay half-life. Older sentiment counts less.
@@ -93,6 +100,12 @@ def compute_for_ticker(db: Session, ticker_id: int) -> CompositeSignal | None:
     weight_sum = sum(weights)
     composite = sum(w * c for w, c in zip(weights, components)) / weight_sum  # [-1, +1]
 
+    # Macro + fundamentals overlays. Both are tiny — they shift the signal
+    # without overriding sentiment + technical, which carry the real weight.
+    macro = macro_overlay(db)
+    fund = fundamentals_overlay(db, ticker_id)
+    composite = max(-1.0, min(1.0, composite + macro.adjustment + fund.adjustment))
+
     # 0-100 score the frontend can show.
     score_0_100 = int(round(50 + composite * 50))
     score_0_100 = max(0, min(100, score_0_100))
@@ -116,11 +129,19 @@ def compute_for_ticker(db: Session, ticker_id: int) -> CompositeSignal | None:
     else:
         label = "neutral"
 
+    # Earnings proximity widens uncertainty — back off confidence a touch.
+    if fund.earnings_within_days is not None and 0 <= fund.earnings_within_days <= 2:
+        confidence_0_100 = max(20, confidence_0_100 - 10)
+
     rationale_bits = []
     if sent is not None and sent_rationale:
         rationale_bits.append(f"News: {sent_rationale[:160]}")
     if tech is not None and tech_rationale:
         rationale_bits.append(f"Technicals: {tech_rationale}")
+    if fund.factors:
+        rationale_bits.append(f"Fundamentals: {', '.join(fund.factors)}")
+    if macro.factors:
+        rationale_bits.append(f"Macro: {', '.join(macro.factors)}")
     rationale = "  |  ".join(rationale_bits) or "Awaiting more data."
 
     return CompositeSignal(
@@ -171,6 +192,25 @@ def refresh_all(db: Session) -> int:
                 signal_confidence=signal.confidence or 30,
                 entry_price=Decimal(str(entry)),
                 signaled_at=datetime.now(timezone.utc),
+            ))
+
+        # ML calibration layer. predict_all returns {horizon: (model_id, prob)}
+        # or None for any horizon without an active trained model — that's
+        # the cold-start case before the first `python -m app.ml.train` run.
+        try:
+            preds = ml_predict_all(db, signal)
+        except Exception:
+            preds = {"1d": None, "5d": None, "21d": None}
+        if any(preds.values()):
+            db.add(MlPrediction(
+                signal_id=signal.id,
+                ticker_id=tid,
+                model_id_1d=preds["1d"][0] if preds["1d"] else None,
+                model_id_5d=preds["5d"][0] if preds["5d"] else None,
+                model_id_21d=preds["21d"][0] if preds["21d"] else None,
+                prob_up_1d=Decimal(str(round(preds["1d"][1], 4))) if preds["1d"] else None,
+                prob_up_5d=Decimal(str(round(preds["5d"][1], 4))) if preds["5d"] else None,
+                prob_up_21d=Decimal(str(round(preds["21d"][1], 4))) if preds["21d"] else None,
             ))
         n += 1
     return n

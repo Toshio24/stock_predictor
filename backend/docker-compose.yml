@@ -35,11 +35,14 @@ services:
       REDIS_URL: redis://redis:6379/0
       FINNHUB_API_KEY: ${FINNHUB_API_KEY}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      FRED_API_KEY: ${FRED_API_KEY:-}
       TRACKED_TICKERS: ${TRACKED_TICKERS:-}
+      ML_MODEL_DIR: /app/ml_artifacts
     ports:
       - "8000:8000"
     volumes:
       - .:/app
+      - ml_artifacts:/app/ml_artifacts
     depends_on:
       postgres:
         condition: service_healthy
@@ -54,8 +57,11 @@ services:
       REDIS_URL: redis://redis:6379/0
       FINNHUB_API_KEY: ${FINNHUB_API_KEY}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      FRED_API_KEY: ${FRED_API_KEY:-}
+      ML_MODEL_DIR: /app/ml_artifacts
     volumes:
       - .:/app
+      - ml_artifacts:/app/ml_artifacts
     depends_on:
       postgres:
         condition: service_healthy
@@ -64,3 +70,4 @@ services:
 
 volumes:
   pgdata:
+  ml_artifacts:

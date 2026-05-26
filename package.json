@@ -4,14 +4,20 @@
   "description": "Signal — AI-powered trading signals platform",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "NODE_ENV=production node server.js",
+    "dev": "node --watch server.js",
+    "audit:secrets": "git ls-files | xargs grep -lE 'sk-[A-Za-z0-9_-]{20,}|FINNHUB|ANTHROPIC|FIREBASE_PRIVATE_KEY' 2>/dev/null | grep -v .env.example | grep -v package.json && echo '⚠️  potential secrets found above' && exit 1 || echo 'OK — no secrets in tracked files'"
   },
   "engines": {
     "node": ">=18"
   },
   "dependencies": {
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.6",
     "ejs": "^3.1.10",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "hpp": "^0.2.3"
   }
 }

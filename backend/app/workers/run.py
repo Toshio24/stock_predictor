@@ -4,7 +4,11 @@ later if any worker needs its own scaling envelope."""
 import asyncio
 import logging
 
-from app.workers import ingest_news, classify, quotes, composite, prices, outcomes
+from app.workers import (
+    ingest_news, classify, quotes, composite, prices, outcomes,
+    macro, fundamentals, ml_train,
+)
+from app.security import scrub
 
 
 async def main() -> None:
@@ -12,6 +16,8 @@ async def main() -> None:
         level=logging.INFO,
         format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
     )
+    # Same log scrubbing as the API process so worker logs never leak keys.
+    scrub.install()
     await asyncio.gather(
         ingest_news.run(),
         classify.run(),
@@ -19,6 +25,9 @@ async def main() -> None:
         prices.run(),
         composite.run(),
         outcomes.run(),
+        macro.run(),
+        fundamentals.run(),
+        ml_train.run(),
     )
 
 

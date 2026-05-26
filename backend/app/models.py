@@ -155,7 +155,105 @@ class DailyBar(Base):
     volume = Column(BigInteger)
 
 
+class MacroIndicator(Base):
+    """FRED macro series snapshot. Single row per (series_id, observed_at)."""
+    __tablename__ = "macro_indicators"
+
+    id = Column(Integer, primary_key=True)
+    series_id = Column(String(40), nullable=False)
+    label = Column(String(120))
+    value = Column(Numeric(14, 4))
+    observed_at = Column(DateTime(timezone=True), nullable=False)
+    fetched_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("series_id", "observed_at", name="uq_macro_series_observed"),
+    )
+
+
+class Fundamentals(Base):
+    """Per-ticker snapshot of valuation + financial-health metrics."""
+    __tablename__ = "fundamentals"
+
+    ticker_id = Column(Integer, ForeignKey("tickers.id", ondelete="CASCADE"), primary_key=True)
+    pe_ratio = Column(Numeric(12, 4))
+    eps_ttm = Column(Numeric(12, 4))
+    market_cap = Column(Numeric(20, 2))
+    dividend_yield = Column(Numeric(8, 4))
+    beta = Column(Numeric(8, 4))
+    revenue_ttm = Column(Numeric(20, 2))
+    profit_margin = Column(Numeric(8, 4))
+    debt_to_equity = Column(Numeric(8, 4))
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class EarningsEvent(Base):
+    """Scheduled or historical earnings date for a ticker."""
+    __tablename__ = "earnings_events"
+
+    id = Column(Integer, primary_key=True)
+    ticker_id = Column(Integer, ForeignKey("tickers.id", ondelete="CASCADE"), nullable=False)
+    event_date = Column(DateTime(timezone=True), nullable=False)
+    period = Column(String(20))
+    eps_estimate = Column(Numeric(12, 4))
+    eps_actual = Column(Numeric(12, 4))
+    revenue_estimate = Column(Numeric(20, 2))
+    revenue_actual = Column(Numeric(20, 2))
+    hour = Column(String(10))
+    fetched_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("ticker_id", "event_date", name="uq_earnings_ticker_date"),
+    )
+
+
+class MlModel(Base):
+    """One row per training run. We keep history so the dashboard can show
+    'model X trained 6h ago' and we can roll back if a new model is worse."""
+    __tablename__ = "ml_models"
+
+    id = Column(Integer, primary_key=True)
+    horizon = Column(String(10), nullable=False)              # "1d" / "5d" / "21d"
+    model_type = Column(String(50), nullable=False)            # "hgbc" for now
+    trained_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    n_train_samples = Column(Integer, nullable=False)
+    n_test_samples = Column(Integer, nullable=False)
+    accuracy = Column(Numeric(6, 4))
+    roc_auc = Column(Numeric(6, 4))
+    brier_score = Column(Numeric(6, 4))
+    feature_importances = Column(JSON)
+    artifact_path = Column(String(255), nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+
+
+class MlPrediction(Base):
+    """Calibrated probability of a positive forward return for a single
+    composite signal. Filled in by the composite worker the moment a new
+    signal is created; the realized_* columns are populated by the
+    outcomes worker once the horizon resolves."""
+    __tablename__ = "ml_predictions"
+
+    id = Column(Integer, primary_key=True)
+    signal_id = Column(Integer, ForeignKey("composite_signals.id", ondelete="CASCADE"), nullable=False)
+    ticker_id = Column(Integer, ForeignKey("tickers.id", ondelete="CASCADE"), nullable=False)
+    model_id_1d = Column(Integer, ForeignKey("ml_models.id", ondelete="SET NULL"))
+    model_id_5d = Column(Integer, ForeignKey("ml_models.id", ondelete="SET NULL"))
+    model_id_21d = Column(Integer, ForeignKey("ml_models.id", ondelete="SET NULL"))
+    prob_up_1d = Column(Numeric(6, 4))
+    prob_up_5d = Column(Numeric(6, 4))
+    prob_up_21d = Column(Numeric(6, 4))
+    predicted_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    realized_1d = Column(Numeric(8, 4))
+    realized_5d = Column(Numeric(8, 4))
+    realized_21d = Column(Numeric(8, 4))
+
+
 Index("ix_articles_published_desc", Article.published_at.desc())
 Index("ix_composite_ticker_time", CompositeSignal.ticker_id, CompositeSignal.computed_at.desc())
 Index("ix_llm_ticker_time", LlmAnalysis.ticker_id, LlmAnalysis.created_at.desc())
 Index("ix_daily_bars_ticker_date", DailyBar.ticker_id, DailyBar.bar_date.desc())
+Index("ix_macro_series_observed", MacroIndicator.series_id, MacroIndicator.observed_at.desc())
+Index("ix_earnings_ticker_date", EarningsEvent.ticker_id, EarningsEvent.event_date.asc())
+Index("ix_ml_models_horizon_active", MlModel.horizon, MlModel.is_active)
+Index("ix_ml_predictions_signal", MlPrediction.signal_id)
+Index("ix_ml_predictions_predicted", MlPrediction.predicted_at.desc())

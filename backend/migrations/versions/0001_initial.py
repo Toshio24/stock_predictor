@@ -103,10 +103,11 @@ def upgrade() -> None:
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
     )
 
-    # Make composite_signals a hypertable for time-series scale
-    op.execute(
-        "SELECT create_hypertable('composite_signals', 'computed_at', if_not_exists => TRUE, migrate_data => TRUE)"
-    )
+    # NOTE: composite_signals was originally a TimescaleDB hypertable
+    # partitioned on `computed_at`, but Timescale requires the partition
+    # column to be part of the primary key. We keep `id` as a simple PK
+    # for now and will convert to a hypertable in a later migration once
+    # the row count justifies the partitioning overhead (currently 0 rows).
 
 
 def downgrade() -> None:

@@ -1,12 +1,28 @@
 <%
   var n = news;
   var variant = typeof variant === 'undefined' ? 'compact' : variant;
+  // Some sources don't carry a URL — render the headline as text in
+  // that case rather than a broken link. `rel="noopener noreferrer"`
+  // is the standard hardening on target=_blank so the external page
+  // can't manipulate window.opener.
+  var hasUrl = !!(n.url && /^https?:\/\//i.test(n.url));
+  var linkOpen = hasUrl
+    ? '<a href="' + n.url + '" target="_blank" rel="noopener noreferrer" class="hover:underline" style="color: inherit; text-decoration: none;">'
+    : '<span>';
+  var linkClose = hasUrl ? '</a>' : '</span>';
 %>
 <article class="glass-card p-4 <%= variant === 'featured' ? 'lg:flex gap-5' : '' %>">
   <% if (variant === 'featured') { %>
-    <div class="lg:w-44 flex-shrink-0 h-32 lg:h-auto rounded-xl mb-3 lg:mb-0 bg-gradient-to-br from-blue-500/30 via-purple-500/20 to-emerald-500/20 grid place-items-center">
-      <span class="text-3xl font-bold opacity-30" style="color: var(--text-strong);"><%= n.category.charAt(0) %></span>
-    </div>
+    <% if (hasUrl) { %>
+      <a href="<%= n.url %>" target="_blank" rel="noopener noreferrer"
+         class="lg:w-44 flex-shrink-0 h-32 lg:h-auto rounded-xl mb-3 lg:mb-0 bg-gradient-to-br from-blue-500/30 via-purple-500/20 to-emerald-500/20 grid place-items-center hover:brightness-110 transition">
+        <span class="text-3xl font-bold opacity-30" style="color: var(--text-strong);"><%= n.category.charAt(0) %></span>
+      </a>
+    <% } else { %>
+      <div class="lg:w-44 flex-shrink-0 h-32 lg:h-auto rounded-xl mb-3 lg:mb-0 bg-gradient-to-br from-blue-500/30 via-purple-500/20 to-emerald-500/20 grid place-items-center">
+        <span class="text-3xl font-bold opacity-30" style="color: var(--text-strong);"><%= n.category.charAt(0) %></span>
+      </div>
+    <% } %>
   <% } %>
   <div class="flex-1 min-w-0">
     <div class="flex items-center justify-between gap-2 mb-2">
@@ -14,13 +30,26 @@
         <span class="text-[11px] font-semibold tracking-wide uppercase" style="color: var(--accent);"><%= n.source %></span>
         <span style="color: var(--text-muted);">•</span>
         <span class="text-[11px]" style="color: var(--text-muted);"><%= n.timeAgo %></span>
+        <% if (hasUrl) { %>
+          <span style="color: var(--text-muted);">•</span>
+          <a href="<%= n.url %>" target="_blank" rel="noopener noreferrer"
+             class="text-[11px] hover:underline inline-flex items-center gap-1"
+             style="color: var(--accent);">
+            Open article ↗
+          </a>
+        <% } %>
       </div>
       <span class="sentiment-badge <%= n.sentiment %>"><%= n.sentiment %></span>
     </div>
-    <h3 class="text-[15px] font-semibold leading-snug mb-2 line-clamp-2" style="color: var(--text-strong);"><%= n.headline %></h3>
+
+    <h3 class="text-[15px] font-semibold leading-snug mb-2 line-clamp-2" style="color: var(--text-strong);">
+      <%- linkOpen %><%= n.headline %><%- linkClose %>
+    </h3>
+
     <% if (variant !== 'compact') { %>
       <p class="text-[13px] leading-relaxed mb-3" style="color: var(--text-muted);"><%= n.summary %></p>
     <% } %>
+
     <div class="flex flex-wrap items-center gap-1.5">
       <% n.tickers.slice(0, 4).forEach(function(t) { %>
         <a href="/ticker/<%= t %>" class="ticker-badge hover:scale-105 transition"><%= t %></a>

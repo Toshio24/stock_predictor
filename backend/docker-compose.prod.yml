@@ -1,0 +1,51 @@
+# Production overlay. Use with:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Key differences vs. dev:
+#   - No code mount (image is the source of truth)
+#   - No --reload on uvicorn
+#   - DB credentials must come from a managed/.env source — defaults are
+#     deliberately removed so you can't ship the demo password
+#   - api + worker scaled separately; the worker container has no port
+#     binding (it doesn't serve HTTP at all)
+#   - read-only filesystem + non-root user for the api container
+
+services:
+  postgres:
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports: []                  # don't expose Postgres to the public internet
+    restart: unless-stopped
+
+  redis:
+    ports: []                  # same — internal only
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+
+  api:
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2
+    environment:
+      APP_ENV: prod
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      ALLOWED_USERS: ${ALLOWED_USERS:-}
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-60}
+      RATE_LIMIT_BURST: ${RATE_LIMIT_BURST:-20}
+    volumes: []                 # no code mount in prod
+    read_only: true
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+
+  worker:
+    environment:
+      APP_ENV: prod
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+    volumes: []
+    restart: unless-stopped

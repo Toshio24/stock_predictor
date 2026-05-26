@@ -11,11 +11,11 @@ from datetime import datetime, timezone, timedelta
 from decimal import Decimal
 from typing import Optional
 
-from sqlalchemy import select, and_, or_
+from sqlalchemy import select, and_, or_, update
 from sqlalchemy.orm import Session
 
 from app.db import session_scope
-from app.models import DailyBar, SignalOutcome
+from app.models import DailyBar, MlPrediction, SignalOutcome
 
 log = logging.getLogger(__name__)
 
@@ -87,6 +87,21 @@ def _resolve_pending(db: Session, limit: int = 200) -> int:
         if changed:
             n_changed += 1
             log.info(f"resolved signal {row.signal_id} ({row.signal_label} score={row.signal_score}): {summary}")
+            # Mirror the realised return onto any matching ML prediction
+            # so the performance dashboard can read it without joining.
+            values = {}
+            if "1d" in summary and row.return_1d is not None:
+                values["realized_1d"] = row.return_1d
+            if "5d" in summary and row.return_5d is not None:
+                values["realized_5d"] = row.return_5d
+            if "21d" in summary and row.return_21d is not None:
+                values["realized_21d"] = row.return_21d
+            if values:
+                db.execute(
+                    update(MlPrediction)
+                    .where(MlPrediction.signal_id == row.signal_id)
+                    .values(**values)
+                )
     return n_changed
 
 

@@ -7,12 +7,16 @@ from app.models import Ticker
 from app.routers._helpers import (
     latest_signal_for, quote_for, recent_spark, signal_payload,
 )
+from app.security.auth import current_user, User
 
 router = APIRouter()
 
 
 @router.get("/signals")
-def list_signals(db: Session = Depends(get_db)) -> list[dict]:
+def list_signals(
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+) -> list[dict]:
     """All active signals — sorted by score desc, then |sentiment| so the
     strongest bull/bear surface first."""
     tickers = db.execute(select(Ticker).where(Ticker.is_active.is_(True))).scalars().all()
@@ -27,7 +31,13 @@ def list_signals(db: Session = Depends(get_db)) -> list[dict]:
 
 
 @router.get("/signals/{symbol}")
-def signal_for(symbol: str, db: Session = Depends(get_db)) -> dict:
+def signal_for(
+    symbol: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+) -> dict:
+    if not symbol or len(symbol) > 10:
+        raise HTTPException(400, "invalid symbol")
     ticker = db.execute(select(Ticker).where(Ticker.symbol == symbol.upper())).scalar_one_or_none()
     if not ticker:
         raise HTTPException(404, "ticker not tracked")

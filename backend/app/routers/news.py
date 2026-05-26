@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.db import get_db
 from app.models import Article, ArticleTicker, LlmAnalysis, Ticker
 from app.routers._helpers import news_payload
+from app.security.auth import current_user, User
 
 router = APIRouter()
 
@@ -31,8 +32,9 @@ def _ticker_symbols(db: Session, article_id: int) -> list[str]:
 @router.get("/news")
 def list_news(
     limit: int = Query(40, ge=1, le=100),
-    ticker: str | None = None,
+    ticker: str | None = Query(None, max_length=10, pattern=r"^[A-Za-z0-9.\-]{1,10}$"),
     db: Session = Depends(get_db),
+    user: User = Depends(current_user),
 ) -> list[dict]:
     q = (
         select(Article)

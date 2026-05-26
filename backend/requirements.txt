@@ -13,3 +13,11 @@ tenacity==9.0.0
 feedparser==6.0.11
 pandas==2.2.3
 numpy==2.1.2
+
+# Security
+slowapi==0.1.9
+python-jose[cryptography]==3.3.0
+
+# ML calibration layer
+scikit-learn==1.5.2
+joblib==1.4.2
