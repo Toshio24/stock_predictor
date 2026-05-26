@@ -1,8 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "echo 'no build — Express SSR'",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/server.js" }
+    { "source": "/(.*)", "destination": "/api/index" }
   ],
   "headers": [
     {
@@ -14,10 +13,5 @@
         { "key": "Permissions-Policy", "value": "geolocation=(), microphone=(), camera=()" }
       ]
     }
-  ],
-  "functions": {
-    "server.js": {
-      "maxDuration": 10
-    }
-  }
+  ]
 }
