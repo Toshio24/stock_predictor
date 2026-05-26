@@ -127,6 +127,43 @@ app.use(express.static(path.join(__dirname, 'public'), {
 }));
 
 // ---------------------------------------------------------------------------
+// Session: pull the Firebase ID token from our signed HTTP-only cookie and
+// attach it to req.idToken so data/api.js forwards it as Bearer auth.
+// Cookie is set by POST /api/auth/session (client posts the token after a
+// successful Firebase sign-in) and cleared by DELETE /api/auth/session.
+// ---------------------------------------------------------------------------
+const SESSION_COOKIE = 'signal_session';
+app.use((req, res, next) => {
+  const token = req.signedCookies && req.signedCookies[SESSION_COOKIE];
+  if (token) req.idToken = token;
+  next();
+});
+
+// Route guard: anything that isn't a public path requires a session token.
+// Public: auth pages, the session endpoints themselves, and static assets
+// (already short-circuited by express.static above).
+const PUBLIC_PATHS = new Set([
+  '/login', '/signup', '/forgot-password', '/onboarding',
+]);
+function isPublic(req) {
+  if (PUBLIC_PATHS.has(req.path)) return true;
+  if (req.path.startsWith('/api/auth/')) return true;
+  if (req.path === '/healthz') return true;
+  return false;
+}
+const AUTH_ENABLED = Boolean(process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_WEB_API_KEY);
+app.use((req, res, next) => {
+  if (!AUTH_ENABLED) return next();          // dev / unconfigured → no gate
+  if (req.idToken) return next();
+  if (isPublic(req)) return next();
+  if (req.method === 'GET') {
+    const next_ = encodeURIComponent(req.originalUrl || '/');
+    return res.redirect(`/login?next=${next_}`);
+  }
+  return res.status(401).json({ error: 'auth required' });
+});
+
+// ---------------------------------------------------------------------------
 // Locals applied to every view
 // ---------------------------------------------------------------------------
 app.use((req, res, next) => {
@@ -143,9 +180,7 @@ app.use((req, res, next) => {
     { href: '/alerts', label: 'Alerts', icon: 'alerts' },
     { href: '/settings', label: 'Settings', icon: 'settings' },
   ];
-  // Real user identity will come from Firebase ID-token claims once auth
-  // is wired up. For now we render a placeholder so views don't crash.
-  res.locals.user = { name: 'Toshi Nagai', email: 'test@gmail.com', initials: 'TN' };
+  res.locals.user = userFromIdToken(req.idToken);
   res.locals.marketStatus = mock.marketStatus();
   res.locals.notifications = mock.notifications;
   res.locals.currentPath = req.path;
@@ -164,6 +199,31 @@ app.use((req, res, next) => {
 const render = (view, title, extras = {}) => (req, res) => {
   res.render('layouts/main', { view: `pages/${view}`, title, page: view, ...extras });
 };
+
+// Decode the JWT payload (no signature verification — the backend does that).
+// We only read it for display purposes so the topbar/sidebar can show the
+// signed-in user's name + email instead of a placeholder.
+function userFromIdToken(token) {
+  const fallback = { name: 'Guest', email: '', initials: '?' };
+  if (!token || typeof token !== 'string') return fallback;
+  const parts = token.split('.');
+  if (parts.length !== 3) return fallback;
+  try {
+    const json = Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+    const claims = JSON.parse(json);
+    const email = String(claims.email || '');
+    const name = String(claims.name || email.split('@')[0] || 'User');
+    const initials = name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0].toUpperCase())
+      .join('') || (email[0] || '?').toUpperCase();
+    return { name, email, initials };
+  } catch (_) {
+    return fallback;
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Pages
@@ -279,21 +339,36 @@ app.get('/forgot-password', renderAuth('forgot-password', 'Reset password'));
 app.get('/onboarding', renderAuth('onboarding', 'Welcome'));
 
 // ---------------------------------------------------------------------------
-// Auth: this is a *thin shim* in front of Firebase.
-// Real authentication happens in the browser (Firebase JS SDK). The frontend
-// stores the resulting ID token and sends it on every request to /api/* —
-// the backend verifies it. These Express endpoints exist only as a fallback
-// for the legacy forms; they never issue session tokens themselves.
+// Session endpoints — the browser does the actual Firebase sign-in, then
+// posts the resulting ID token here so we can store it in a signed
+// HTTP-only cookie. Subsequent requests have req.idToken set by the session
+// middleware above, which data/api.js forwards to the Python backend as
+// Authorization: Bearer <token>. The backend verifies the JWT signature.
+//
+// Storing the token server-side (cookie) instead of client-side
+// (localStorage) is intentional: an XSS bug can't exfiltrate it.
 // ---------------------------------------------------------------------------
-app.post('/api/auth/login', authLimiter, (req, res) => {
-  const email = String(req.body?.email || '').trim().slice(0, 200);
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'invalid email' });
-  res.json({ ok: true, message: 'Use Firebase client SDK for auth in production.' });
+app.post('/api/auth/session', authLimiter, (req, res) => {
+  const idToken = String(req.body?.idToken || '');
+  // JWT shape sanity check — three base64url segments separated by '.'.
+  // The backend does the real cryptographic verification.
+  if (!/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(idToken) || idToken.length > 8192) {
+    return res.status(400).json({ error: 'invalid token' });
+  }
+  res.cookie(SESSION_COOKIE, idToken, {
+    httpOnly: true,
+    secure: IS_PROD,
+    sameSite: 'lax',
+    signed: true,
+    maxAge: 60 * 60 * 1000, // 1h — matches Firebase ID-token lifetime
+    path: '/',
+  });
+  res.json({ ok: true });
 });
-app.post('/api/auth/signup', authLimiter, (req, res) => {
-  const email = String(req.body?.email || '').trim().slice(0, 200);
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'invalid email' });
-  res.json({ ok: true, message: 'Use Firebase client SDK for auth in production.' });
+
+app.delete('/api/auth/session', (req, res) => {
+  res.clearCookie(SESSION_COOKIE, { path: '/' });
+  res.json({ ok: true });
 });
 
 // Search proxy — already validates query length backend-side; we cap here too.

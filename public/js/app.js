@@ -182,27 +182,77 @@
     });
   });
 
-  // ---------- auth forms (mock) ---------------------------------------------
-  document.querySelectorAll('form[data-auth]').forEach((form) => {
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(form).entries());
-      const kind = form.dataset.auth;
-      const url = kind === 'login' ? '/api/auth/login' : kind === 'signup' ? '/api/auth/signup' : null;
-      if (!url) {
-        toast('Reset link sent to ' + (data.email || 'your inbox'), { type: 'success' });
-        return;
+  // ---------- auth forms (Firebase) -----------------------------------------
+  // Firebase SDK loads as a module and may not be ready when this script
+  // runs. Wait for the `signal-auth-ready` event before binding handlers.
+  function wireAuth() {
+    const Auth = window.SignalAuth;
+    if (!Auth || !Auth.enabled) {
+      // Auth not configured (missing FIREBASE_* env vars). Surface it so
+      // users don't sit on a dead button thinking it's broken.
+      document.querySelectorAll('form[data-auth], [data-auth-google], [data-logout]').forEach((el) => {
+        el.addEventListener('click', (e) => {
+          e.preventDefault();
+          toast('Sign-in is not configured on this deploy', { type: 'error' });
+        });
+      });
+      return;
+    }
+
+    async function handle(action, successMsg) {
+      try {
+        const user = await action();
+        toast(successMsg.replace('{name}', user.displayName || user.email || ''), { type: 'success' });
+        setTimeout(() => { window.location.href = '/'; }, 500);
+      } catch (e) {
+        toast(humanizeFirebaseError(e), { type: 'error' });
       }
-      fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-        .then((r) => r.json())
-        .then((res) => {
-          if (res.ok) {
-            localStorage.setItem('signal:user', JSON.stringify(res.user));
-            toast('Welcome, ' + res.user.name, { type: 'success' });
-            setTimeout(() => { window.location.href = '/'; }, 600);
-          }
-        })
-        .catch(() => toast('Something went wrong', { type: 'error' }));
+    }
+
+    document.querySelectorAll('form[data-auth]').forEach((form) => {
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(form).entries());
+        const kind = form.dataset.auth;
+        if (kind === 'login') {
+          handle(() => Auth.login(data.email, data.password), 'Welcome back');
+        } else if (kind === 'signup') {
+          handle(() => Auth.signup(data.email, data.password, data.name), 'Welcome, {name}');
+        } else if (kind === 'forgot') {
+          Auth.resetPassword(data.email)
+            .then(() => toast('Reset link sent to ' + data.email, { type: 'success' }))
+            .catch((err) => toast(humanizeFirebaseError(err), { type: 'error' }));
+        }
+      });
     });
-  });
+
+    document.querySelectorAll('[data-auth-google]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        handle(() => Auth.loginGoogle(), 'Welcome, {name}');
+      });
+    });
+
+    document.querySelectorAll('[data-logout]').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        Auth.logout();
+      });
+    });
+  }
+
+  function humanizeFirebaseError(e) {
+    const code = (e && e.code) || '';
+    if (code === 'auth/invalid-credential' || code === 'auth/wrong-password' || code === 'auth/user-not-found') {
+      return 'Incorrect email or password';
+    }
+    if (code === 'auth/email-already-in-use') return 'That email already has an account';
+    if (code === 'auth/weak-password') return 'Password is too weak (min 6 characters)';
+    if (code === 'auth/popup-closed-by-user') return 'Sign-in cancelled';
+    if (code === 'auth/network-request-failed') return 'Network error — check your connection';
+    return (e && e.message) || 'Something went wrong';
+  }
+
+  if (window.SignalAuth) wireAuth();
+  else window.addEventListener('signal-auth-ready', wireAuth, { once: true });
 })();
