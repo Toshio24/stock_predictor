@@ -32,7 +32,7 @@
     })();
   </script>
 
-  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/styles.css?v=<%= assetVersion %>" />
 </head>
 <body>
   <div id="app" class="flex min-h-screen">
@@ -53,8 +53,8 @@
   <script nonce="<%= cspNonce %>">
     window.firebaseConfig = <%- JSON.stringify(firebaseConfig) %>;
   </script>
-  <script type="module" src="/js/firebase-auth.js" nonce="<%= cspNonce %>"></script>
-  <script src="/js/sparkline.js" nonce="<%= cspNonce %>"></script>
-  <script src="/js/app.js" nonce="<%= cspNonce %>"></script>
+  <script type="module" src="/js/firebase-auth.js?v=<%= assetVersion %>" nonce="<%= cspNonce %>"></script>
+  <script src="/js/sparkline.js?v=<%= assetVersion %>" nonce="<%= cspNonce %>"></script>
+  <script src="/js/app.js?v=<%= assetVersion %>" nonce="<%= cspNonce %>"></script>
 </body>
 </html>

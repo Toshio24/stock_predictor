@@ -486,11 +486,15 @@ html.dark input.glass-input {
 
 /* responsive -------------------------------------------------------------- */
 @media (max-width: 1024px) {
-  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; z-index: 60; transform: translateX(-100%); }
+  /* The sidebar becomes an off-canvas drawer; it must not reserve layout
+     width. Dropping #app out of flex (to block) guarantees the main column
+     fills the full screen regardless of how the flex sidebar is treated. */
+  #app { display: block; }
+  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; z-index: 60; transform: translateX(-100%); width: 280px; max-width: 85vw; }
   .sidebar.mobile-open { transform: translateX(0); }
   .sidebar-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 55; opacity: 0; pointer-events: none; transition: opacity .2s; }
   .sidebar-backdrop.open { opacity: 1; pointer-events: auto; }
-  .main-shell { margin-left: 0 !important; }
+  .main-shell { margin-left: 0 !important; width: 100% !important; max-width: 100% !important; }
   .hide-mobile { display: none; }
 }
 

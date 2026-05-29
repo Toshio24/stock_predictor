@@ -28,6 +28,12 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const IS_PROD = process.env.NODE_ENV === 'production';
 
+// Cache-busting token for static assets. Static files are served with a long
+// max-age, so a non-versioned URL like /css/styles.css would be cached for
+// days and never pick up a deploy. Appending ?v=<token> — which changes on
+// every Vercel deploy (commit SHA) or process restart — forces a fresh fetch.
+const ASSET_VERSION = process.env.VERCEL_GIT_COMMIT_SHA || String(Date.now());
+
 // Behind Vercel / a reverse proxy → trust the X-Forwarded-* headers so
 // req.ip and req.protocol reflect the real client. Only do this when
 // actually deployed — locally we want to refuse spoofed headers.
@@ -174,6 +180,7 @@ app.use((req, res, next) => {
   const lang = i18n.normalizeLang(req.cookies && req.cookies.lang);
   res.locals.lang = lang;
   res.locals.t = (str) => i18n.translate(lang, str);
+  res.locals.assetVersion = ASSET_VERSION;
   next();
 });
 
