@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="<%= lang === 'zh' ? 'zh-CN' : 'en' %>" class="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -45,6 +45,8 @@
     </div>
     <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
   </div>
+
+  <%- include('../partials/mobile-nav', { currentPath: currentPath }) %>
 
   <div id="toast-host"></div>
 

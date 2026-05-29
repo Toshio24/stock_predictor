@@ -1,0 +1,22 @@
+<%
+  // Primary destinations for the mobile bottom tab bar. Kept short (5 max)
+  // so each tab has a comfortable touch target. The full nav list is still
+  // reachable via the hamburger drawer.
+  const mobileNav = [
+    { href: '/',          label: t('Dashboard'), icon: 'dashboard' },
+    { href: '/signals',   label: t('Signals'),   icon: 'signals' },
+    { href: '/news',      label: t('News'),      icon: 'news' },
+    { href: '/watchlist', label: t('Watchlist'), icon: 'watchlist' },
+    { href: '/ml',        label: t('ML Data'),   icon: 'brain' },
+  ];
+%>
+<nav class="mobile-tabbar" aria-label="Primary">
+  <% mobileNav.forEach(function(item) {
+    const active = currentPath === item.href || (item.href !== '/' && currentPath.startsWith(item.href));
+  %>
+    <a href="<%= item.href %>" class="mobile-tab <%= active ? 'active' : '' %>" <%= active ? 'aria-current="page"' : '' %>>
+      <span class="mobile-tab-icon"><%- include('icon', { name: item.icon, size: 22 }) %></span>
+      <span class="mobile-tab-label"><%= item.label %></span>
+    </a>
+  <% }); %>
+</nav>

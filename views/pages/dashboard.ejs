@@ -1,24 +1,24 @@
 <!-- Page header -->
 <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
   <div>
-    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);">Good day, <%= user.name %>.</h1>
-    <p class="text-[14px]" style="color: var(--text-muted);">Here's the market through your model's lens.</p>
+    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);"><%= t('Good day,') %> <%= user.name %>.</h1>
+    <p class="text-[14px]" style="color: var(--text-muted);"><%= t("Here's the market through your model's lens.") %></p>
   </div>
   <div class="flex gap-2">
-    <button class="glass-button">Refresh</button>
-    <button class="glass-button primary">+ New alert</button>
+    <button class="glass-button"><%= t('Refresh') %></button>
+    <button class="glass-button primary">+ <%= t('New alert') %></button>
   </div>
 </div>
 
 <!-- Market overview carousel -->
 <section class="mb-8">
   <div class="flex items-center justify-between mb-3">
-    <span class="section-title">Market overview</span>
+    <span class="section-title"><%= t('Market overview') %></span>
     <div class="flex gap-1.5">
-      <button class="glass-tab active">Global</button>
-      <button class="glass-tab">US</button>
-      <button class="glass-tab">Crypto</button>
-      <button class="glass-tab">Rates</button>
+      <button class="glass-tab active"><%= t('Global') %></button>
+      <button class="glass-tab"><%= t('US') %></button>
+      <button class="glass-tab"><%= t('Crypto') %></button>
+      <button class="glass-tab"><%= t('Rates') %></button>
     </div>
   </div>
   <div data-stagger class="stagger grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -33,8 +33,8 @@
   <!-- Top signals (3 cols) -->
   <section class="lg:col-span-3">
     <div class="flex items-center justify-between mb-3">
-      <span class="section-title">Top signals</span>
-      <a href="/signals" class="glass-tab">View all →</a>
+      <span class="section-title"><%= t('Top signals') %></span>
+      <a href="/signals" class="glass-tab"><%= t('View all') %> →</a>
     </div>
     <div data-stagger class="stagger grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
       <% signals.forEach(function(s) { %>
@@ -45,7 +45,7 @@
 
   <!-- Accuracy ring (2 cols) -->
   <section class="lg:col-span-2">
-    <span class="section-title">Signal accuracy · 30d</span>
+    <span class="section-title"><%= t('Signal accuracy · 30d') %></span>
     <div class="glass-card p-6">
       <div class="flex items-center gap-6">
         <div class="relative w-40 h-40 flex-shrink-0">
@@ -65,28 +65,28 @@
           <div class="absolute inset-0 grid place-items-center text-center">
             <div>
               <div class="num text-3xl font-bold" style="color: var(--text-strong);"><%= accuracy.overall %>%</div>
-              <div class="text-[10px] uppercase tracking-widest" style="color: var(--text-muted);">accuracy</div>
+              <div class="text-[10px] uppercase tracking-widest" style="color: var(--text-muted);"><%= t('accuracy') %></div>
             </div>
           </div>
         </div>
         <div class="flex-1 space-y-2.5">
           <div>
             <div class="flex justify-between text-[12px] mb-1">
-              <span style="color: var(--text-muted);">Bullish calls</span>
+              <span style="color: var(--text-muted);"><%= t('Bullish calls') %></span>
               <span class="num font-semibold text-bull"><%= accuracy.bullish %>%</span>
             </div>
             <div class="confidence-bar"><span style="width: <%= accuracy.bullish %>%; background: linear-gradient(90deg,#10b981,#059669);"></span></div>
           </div>
           <div>
             <div class="flex justify-between text-[12px] mb-1">
-              <span style="color: var(--text-muted);">Bearish calls</span>
+              <span style="color: var(--text-muted);"><%= t('Bearish calls') %></span>
               <span class="num font-semibold text-bear"><%= accuracy.bearish %>%</span>
             </div>
             <div class="confidence-bar"><span style="width: <%= accuracy.bearish %>%; background: linear-gradient(90deg,#ef4444,#dc2626);"></span></div>
           </div>
           <div>
             <div class="flex justify-between text-[12px] mb-1">
-              <span style="color: var(--text-muted);">Neutral calls</span>
+              <span style="color: var(--text-muted);"><%= t('Neutral calls') %></span>
               <span class="num font-semibold text-neutral"><%= accuracy.neutral %>%</span>
             </div>
             <div class="confidence-bar"><span style="width: <%= accuracy.neutral %>%; background: linear-gradient(90deg,#f59e0b,#d97706);"></span></div>
@@ -102,8 +102,8 @@
   <!-- News feed (2 cols) -->
   <section class="lg:col-span-2">
     <div class="flex items-center justify-between mb-3">
-      <span class="section-title">Live news</span>
-      <a href="/news" class="glass-tab">All →</a>
+      <span class="section-title"><%= t('Live news') %></span>
+      <a href="/news" class="glass-tab"><%= t('All') %> →</a>
     </div>
     <div class="space-y-3" data-stagger>
       <% news.slice(0, 5).forEach(function(n) { %>
@@ -115,38 +115,38 @@
   <!-- Watchlist (3 cols) -->
   <section class="lg:col-span-3">
     <div class="flex items-center justify-between mb-3">
-      <span class="section-title">Watchlist</span>
+      <span class="section-title"><%= t('Watchlist') %></span>
       <div class="flex gap-1.5">
-        <button class="glass-tab active">All</button>
-        <button class="glass-tab">Bullish</button>
-        <button class="glass-tab">Bearish</button>
+        <button class="glass-tab active"><%= t('All') %></button>
+        <button class="glass-tab"><%= t('Bullish') %></button>
+        <button class="glass-tab"><%= t('Bearish') %></button>
       </div>
     </div>
-    <div class="glass-table">
+    <div class="glass-table cards">
       <table class="w-full">
         <thead>
           <tr>
-            <th>Ticker</th>
-            <th>Name</th>
-            <th class="text-right">Price</th>
-            <th class="text-right">Change</th>
-            <th class="text-right">Score</th>
-            <th>Signal</th>
+            <th><%= t('Ticker') %></th>
+            <th><%= t('Name') %></th>
+            <th class="text-right"><%= t('Price') %></th>
+            <th class="text-right"><%= t('Change') %></th>
+            <th class="text-right"><%= t('Score') %></th>
+            <th><%= t('Signal') %></th>
           </tr>
         </thead>
         <tbody>
           <% watchlist.forEach(function(w) { %>
             <tr>
-              <td><a href="/ticker/<%= w.ticker %>" class="ticker-badge"><%= w.ticker %></a></td>
-              <td class="truncate max-w-[200px]" style="color: var(--text);"><%= w.name %></td>
-              <td class="num text-right" style="color: var(--text-strong);">$<%= w.price.toFixed(2) %></td>
-              <td class="num text-right font-semibold <%= w.change >= 0 ? 'text-bull' : 'text-bear' %>">
+              <td class="cell-primary"><a href="/ticker/<%= w.ticker %>" class="ticker-badge"><%= w.ticker %></a></td>
+              <td class="truncate max-w-[200px]" style="color: var(--text);" data-label="<%= t('Name') %>"><%= w.name %></td>
+              <td class="num text-right" style="color: var(--text-strong);" data-label="<%= t('Price') %>">$<%= w.price.toFixed(2) %></td>
+              <td class="num text-right font-semibold <%= w.change >= 0 ? 'text-bull' : 'text-bear' %>" data-label="<%= t('Change') %>">
                 <%= w.change >= 0 ? '+' : '' %><%= w.change.toFixed(2) %>%
               </td>
-              <td class="num text-right">
+              <td class="num text-right" data-label="<%= t('Score') %>">
                 <span class="score-badge <%= w.score >= 80 ? 'high' : w.score >= 60 ? 'med' : 'low' %>"><%= w.score %></span>
               </td>
-              <td><span class="sentiment-badge <%= w.signal %>"><%= w.signal %></span></td>
+              <td data-label="<%= t('Signal') %>"><span class="sentiment-badge <%= w.signal %>"><%= w.signal %></span></td>
             </tr>
           <% }); %>
         </tbody>
@@ -155,7 +155,7 @@
 
     <!-- Sectors -->
     <div class="mt-6">
-      <span class="section-title">Sector performance</span>
+      <span class="section-title"><%= t('Sector performance') %></span>
       <div data-stagger class="stagger grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         <% sectors.forEach(function(sec) {
           var dir = sec.change >= 0 ? 'bullish' : 'bearish';

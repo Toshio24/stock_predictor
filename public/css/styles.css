@@ -457,6 +457,163 @@ html.dark input.glass-input {
   .hide-mobile { display: none; }
 }
 
+/* =========================================================================
+   Mobile — bottom tab bar, responsive tables, phone tuning, safe areas
+   ========================================================================= */
+
+/* Bottom tab bar: hidden on desktop, shown on tablet/phone. The hamburger
+   drawer still holds the full nav; this is fast access to the top 5. */
+.mobile-tabbar { display: none; }
+
+@media (max-width: 1024px) {
+  .mobile-tabbar {
+    display: flex;
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 50;
+    gap: 4px;
+    padding: 6px 8px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    background: rgba(var(--surface-rgb), 0.82);
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    border-top: 1px solid rgba(var(--border-rgb), 0.10);
+    box-shadow: 0 -10px 34px -16px rgba(0, 0, 0, 0.45);
+  }
+  .mobile-tab {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 52px;
+    padding: 5px 0;
+    border-radius: 14px;
+    color: var(--text-muted);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .mobile-tab-icon {
+    display: grid; place-items: center;
+    width: 30px; height: 30px;
+    border-radius: 10px;
+    transition: background .15s ease;
+  }
+  .mobile-tab-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .01em;
+    line-height: 1; white-space: nowrap;
+  }
+  .mobile-tab:active { transform: scale(0.94); }
+  .mobile-tab.active { color: var(--accent); }
+  .mobile-tab.active .mobile-tab-icon {
+    background: linear-gradient(135deg, rgba(59,130,246,0.16), rgba(139,92,246,0.16));
+  }
+
+  /* Keep page content clear of the bottom bar. */
+  .main-shell > main { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important; }
+}
+
+/* Horizontal-scroll safety net: any data table can scroll sideways instead
+   of clipping columns off-screen (the default .glass-table is overflow:hidden). */
+@media (max-width: 768px) {
+  .glass-table:not(.cards) {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  .glass-table:not(.cards) > table { min-width: 600px; }
+}
+
+/* Card-stacked tables: on phones, rows become labeled cards (Robinhood-style).
+   Opt in by adding class `cards` to .glass-table and `data-label` to each td. */
+@media (max-width: 640px) {
+  .glass-table.cards {
+    overflow: visible;
+    background: transparent;
+    border: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-radius: 0;
+  }
+  .glass-table.cards table,
+  .glass-table.cards tbody,
+  .glass-table.cards tr,
+  .glass-table.cards td { display: block; width: 100%; }
+  .glass-table.cards thead { display: none; }
+  .glass-table.cards tbody tr {
+    background: rgba(var(--surface-rgb), 0.55);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border: 1px solid rgba(var(--border-rgb), 0.08);
+    border-radius: 14px;
+    padding: 6px 14px;
+    margin-bottom: 10px;
+  }
+  .glass-table.cards tbody tr:hover { background: rgba(var(--surface-rgb), 0.55); }
+  .glass-table.cards tbody td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    max-width: none !important;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(var(--border-rgb), 0.06);
+    font-size: 13px;
+    text-align: right;
+  }
+  .glass-table.cards tbody td:last-child { border-bottom: none; }
+  .glass-table.cards tbody td::before {
+    content: attr(data-label);
+    color: var(--text-muted);
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .04em;
+    text-align: left;
+    white-space: nowrap;
+  }
+  /* The primary cell (ticker) acts as the card title: no label, left-aligned. */
+  .glass-table.cards tbody td.cell-primary {
+    justify-content: flex-start;
+    padding: 4px 0 8px;
+    border-bottom: 1px solid rgba(var(--border-rgb), 0.10);
+  }
+  .glass-table.cards tbody td.cell-primary::before { display: none; }
+}
+
+/* Phone tuning ≤640px: tighter gutters, calmer type, comfortable touch. */
+@media (max-width: 640px) {
+  .main-shell > main { padding-left: 16px !important; padding-right: 16px !important; }
+
+  /* Bigger tap targets for pills and buttons. */
+  .glass-tab { padding: 8px 12px; min-height: 38px; }
+  .glass-button { padding: 9px 14px; min-height: 40px; }
+  .nav-item { min-height: 46px; }
+
+  /* Headers stack instead of cramping; section titles a touch smaller. */
+  .section-title { font-size: 12px; }
+
+  /* Keep the topbar lean — search shrinks, status hidden (via .hide-mobile). */
+  .glass-nav { padding-left: 12px; padding-right: 12px; }
+
+  /* Toasts span the width above the tab bar instead of floating in a corner. */
+  #toast-host {
+    left: 12px; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+  }
+  .toast { min-width: 0; width: 100%; }
+
+  /* Modals breathe to the screen edges. */
+  .modal-backdrop { padding: 12px; }
+}
+
+/* Respect the notch / status bar at the top for the sticky header. */
+@supports (padding: env(safe-area-inset-top)) {
+  @media (max-width: 1024px) {
+    .glass-nav.sticky { padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
+    .sidebar { padding-top: calc(16px + env(safe-area-inset-top, 0px)); }
+  }
+}
+
 /* circular progress ------------------------------------------------------- */
 .ring { transform: rotate(-90deg); }
 .ring circle { fill: none; stroke-width: 10; transition: stroke-dashoffset .8s ease; }

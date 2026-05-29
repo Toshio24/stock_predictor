@@ -1,34 +1,34 @@
 <!-- Signals Explorer -->
 <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
   <div>
-    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);">Signals Explorer</h1>
-    <p class="text-[14px]" style="color: var(--text-muted);"><%= signals.length %> active signals · updated every 60s</p>
+    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);"><%= t('Signals Explorer') %></h1>
+    <p class="text-[14px]" style="color: var(--text-muted);"><%= signals.length %> <%= t('active signals · updated every 60s') %></p>
   </div>
   <div class="flex items-center gap-2">
     <div class="glass-card p-1 flex gap-1">
-      <button data-view="grid" class="glass-tab active">Grid</button>
-      <button data-view="list" class="glass-tab">List</button>
+      <button data-view="grid" class="glass-tab active"><%= t('Grid') %></button>
+      <button data-view="list" class="glass-tab"><%= t('List') %></button>
     </div>
-    <button class="glass-button primary">+ Save view</button>
+    <button class="glass-button primary">+ <%= t('Save view') %></button>
   </div>
 </div>
 
 <!-- Filter bar -->
 <div class="glass-card p-4 mb-6 flex flex-wrap items-center gap-3">
   <div class="flex gap-1.5 flex-wrap">
-    <button class="glass-tab active">All signals</button>
-    <button class="glass-tab">Bullish</button>
-    <button class="glass-tab">Bearish</button>
-    <button class="glass-tab">Neutral</button>
+    <button class="glass-tab active"><%= t('All signals') %></button>
+    <button class="glass-tab"><%= t('Bullish') %></button>
+    <button class="glass-tab"><%= t('Bearish') %></button>
+    <button class="glass-tab"><%= t('Neutral') %></button>
   </div>
   <div class="h-6 w-px" style="background: rgba(var(--border-rgb), 0.10);"></div>
   <div class="flex gap-1.5 flex-wrap">
-    <button class="glass-tab">High conviction</button>
-    <button class="glass-tab">New today</button>
-    <button class="glass-tab">Crossed target</button>
+    <button class="glass-tab"><%= t('High conviction') %></button>
+    <button class="glass-tab"><%= t('New today') %></button>
+    <button class="glass-tab"><%= t('Crossed target') %></button>
   </div>
   <div class="flex-1 min-w-[180px]">
-    <input class="glass-input" placeholder="Filter by ticker, sector, name…" />
+    <input class="glass-input" placeholder="<%= t('Filter by ticker, sector, name…') %>" />
   </div>
 </div>
 
@@ -40,37 +40,37 @@
 </section>
 
 <!-- List view (hidden by default) -->
-<section id="signals-list" class="glass-table hidden">
+<section id="signals-list" class="glass-table cards hidden">
   <table class="w-full">
     <thead>
       <tr>
-        <th>Ticker</th>
-        <th>Name</th>
-        <th>Sector</th>
-        <th>Signal</th>
-        <th class="text-right">Score</th>
-        <th class="text-right">Confidence</th>
-        <th class="text-right">Price</th>
-        <th class="text-right">Change</th>
-        <th>Updated</th>
+        <th><%= t('Ticker') %></th>
+        <th><%= t('Name') %></th>
+        <th><%= t('Sector') %></th>
+        <th><%= t('Signal') %></th>
+        <th class="text-right"><%= t('Score') %></th>
+        <th class="text-right"><%= t('Confidence') %></th>
+        <th class="text-right"><%= t('Price') %></th>
+        <th class="text-right"><%= t('Change') %></th>
+        <th><%= t('Updated') %></th>
       </tr>
     </thead>
     <tbody>
       <% signals.forEach(function(s) { %>
         <tr>
-          <td><a href="/ticker/<%= s.ticker %>" class="ticker-badge"><%= s.ticker %></a></td>
-          <td class="truncate max-w-[200px]" style="color: var(--text);"><%= s.name %></td>
-          <td class="text-[12px]" style="color: var(--text-muted);"><%= s.sector %></td>
-          <td><span class="sentiment-badge <%= s.signal %>"><%= s.signal %></span></td>
-          <td class="num text-right">
+          <td class="cell-primary"><a href="/ticker/<%= s.ticker %>" class="ticker-badge"><%= s.ticker %></a></td>
+          <td class="truncate max-w-[200px]" style="color: var(--text);" data-label="<%= t('Name') %>"><%= s.name %></td>
+          <td class="text-[12px]" style="color: var(--text-muted);" data-label="<%= t('Sector') %>"><%= s.sector %></td>
+          <td data-label="<%= t('Signal') %>"><span class="sentiment-badge <%= s.signal %>"><%= s.signal %></span></td>
+          <td class="num text-right" data-label="<%= t('Score') %>">
             <span class="score-badge <%= s.score >= 80 ? 'high' : s.score >= 60 ? 'med' : 'low' %>"><%= s.score %></span>
           </td>
-          <td class="num text-right" style="color: var(--text);"><%= s.confidence %>%</td>
-          <td class="num text-right" style="color: var(--text-strong);">$<%= s.price.toFixed(2) %></td>
-          <td class="num text-right font-semibold <%= s.change >= 0 ? 'text-bull' : 'text-bear' %>">
+          <td class="num text-right" style="color: var(--text);" data-label="<%= t('Confidence') %>"><%= s.confidence %>%</td>
+          <td class="num text-right" style="color: var(--text-strong);" data-label="<%= t('Price') %>">$<%= s.price.toFixed(2) %></td>
+          <td class="num text-right font-semibold <%= s.change >= 0 ? 'text-bull' : 'text-bear' %>" data-label="<%= t('Change') %>">
             <%= s.change >= 0 ? '+' : '' %><%= s.change.toFixed(2) %>%
           </td>
-          <td class="text-[12px]" style="color: var(--text-muted);"><%= s.updatedAt %></td>
+          <td class="text-[12px]" style="color: var(--text-muted);" data-label="<%= t('Updated') %>"><%= s.updatedAt %></td>
         </tr>
       <% }); %>
     </tbody>
