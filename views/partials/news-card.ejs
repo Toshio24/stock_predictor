@@ -11,10 +11,16 @@
     : '<span>';
   var linkClose = hasUrl ? '</a>' : '</span>';
 %>
-<article class="glass-card p-4 <%= variant === 'featured' ? 'lg:flex gap-5' : '' %>">
+<article class="news-article glass-card p-4 <%= variant === 'featured' ? 'lg:flex gap-5' : '' %>">
+  <% if (hasUrl) { %>
+    <%# Stretched link: makes the whole card open the article. Ticker badges
+        and explicit links sit above it (z-index) so they stay clickable. %>
+    <a href="<%= n.url %>" target="_blank" rel="noopener noreferrer" class="news-stretch" aria-label="<%= t('Open article') %>"></a>
+  <% } %>
   <% if (variant === 'featured') { %>
     <% if (hasUrl) { %>
       <a href="<%= n.url %>" target="_blank" rel="noopener noreferrer"
+         style="position: relative; z-index: 2;"
          class="lg:w-44 flex-shrink-0 h-32 lg:h-auto rounded-xl mb-3 lg:mb-0 bg-gradient-to-br from-blue-500/30 via-purple-500/20 to-emerald-500/20 grid place-items-center hover:brightness-110 transition">
         <span class="text-3xl font-bold opacity-30" style="color: var(--text-strong);"><%= n.category.charAt(0) %></span>
       </a>
@@ -34,7 +40,7 @@
           <span style="color: var(--text-muted);">•</span>
           <a href="<%= n.url %>" target="_blank" rel="noopener noreferrer"
              class="text-[11px] hover:underline inline-flex items-center gap-1"
-             style="color: var(--accent);">
+             style="color: var(--accent); position: relative; z-index: 2;">
             <%= t('Open article') %> ↗
           </a>
         <% } %>
@@ -52,7 +58,7 @@
 
     <div class="flex flex-wrap items-center gap-1.5">
       <% (n.tickers || []).slice(0, 4).forEach(function(sym) { %>
-        <a href="/ticker/<%= sym %>" class="ticker-badge hover:scale-105 transition"><%= sym %></a>
+        <a href="/ticker/<%= sym %>" class="ticker-badge hover:scale-105 transition" style="position: relative; z-index: 2;"><%= sym %></a>
       <% }); %>
       <span class="ml-auto text-[11px]" style="color: var(--text-muted);"><%= n.category %></span>
     </div>

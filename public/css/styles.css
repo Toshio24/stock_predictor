@@ -116,6 +116,18 @@ html.dark .glass-card { background: rgba(15, 23, 42, 0.55); }
   box-shadow: 0 24px 60px -16px rgba(59, 130, 246, 0.25);
 }
 
+/* News cards: the whole card is a tap target that opens the article.
+   .news-stretch is an invisible overlay link filling the card; ticker badges
+   and explicit links carry z-index:2 inline so they stay independently
+   clickable above it. */
+.news-article { position: relative; }
+.news-article .news-stretch {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+}
+
 .glass-tab {
   background: transparent;
   border: 1px solid rgba(var(--border-rgb), 0.08);
