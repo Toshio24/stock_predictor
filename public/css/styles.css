@@ -19,6 +19,9 @@
   /* sunlit forest */
   --bg-image: url('https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?auto=format&fit=crop&w=2400&q=70');
   --bg-overlay: linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0%, rgba(240, 253, 244, 0.55) 100%);
+  /* Fills the letterbox bars when the whole image is shown (background-size:
+     contain) so they blend with the photo instead of flashing white. */
+  --bg-letterbox: #dfe7e2;
 }
 
 html.dark {
@@ -32,20 +35,26 @@ html.dark {
   /* dark misty forest */
   --bg-image: url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=2400&q=70');
   --bg-overlay: linear-gradient(180deg, rgba(2, 6, 23, 0.78) 0%, rgba(2, 6, 23, 0.92) 100%);
+  --bg-letterbox: #05080f;
 }
 
 /* fonts ------------------------------------------------------------------- */
+html {
+  /* Stop iOS from auto-inflating text on rotation / zoom. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 html, body { font-family: 'Inter', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
 .font-mono, .num { font-family: 'JetBrains Mono', ui-monospace, monospace; font-variant-numeric: tabular-nums; }
 
 /* background -------------------------------------------------------------- */
+/* `background-attachment: fixed` janks and zooms on iOS Safari, so the photo
+   and overlay live on a position:fixed pseudo-element instead — that pins the
+   image to the viewport on every device with no scroll artifacts. */
 body {
   color: var(--text);
   min-height: 100vh;
-  background:
-    var(--bg-overlay),
-    var(--bg-image) center / cover fixed no-repeat;
-  background-attachment: fixed;
+  min-height: 100dvh; /* excludes mobile browser chrome; ignored where unsupported */
   position: relative;
   overflow-x: hidden;
 }
@@ -53,11 +62,25 @@ body {
 body::before {
   content: '';
   position: fixed;
+  inset: 0;
+  z-index: -2;
+  /* Whole image, scaled to fit the screen (no zoom/crop). The solid color
+     fills the letterbox bars; the overlay tints everything for legibility. */
+  background-color: var(--bg-letterbox);
+  background-image: var(--bg-overlay), var(--bg-image);
+  background-position: center, center;
+  background-size: cover, contain;
+  background-repeat: no-repeat, no-repeat;
+}
+
+body::after {
+  content: '';
+  position: fixed;
   inset: -10%;
+  z-index: -1;
   background: radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.18), transparent 40%),
               radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.14), transparent 45%);
   pointer-events: none;
-  z-index: 0;
   animation: drift 30s ease-in-out infinite alternate;
 }
 
@@ -65,7 +88,9 @@ body::before {
   to { transform: translate3d(2%, -2%, 0) scale(1.05); }
 }
 
-#app { position: relative; z-index: 1; }
+/* Tailwind's min-h-screen is 100vh; on mobile that overshoots the visible
+   area behind the browser chrome. Prefer the dynamic viewport unit. */
+#app { position: relative; z-index: 1; min-height: 100dvh; }
 
 /* glassmorphic surfaces --------------------------------------------------- */
 .glass-nav {
@@ -604,6 +629,23 @@ html.dark input.glass-input {
 
   /* Modals breathe to the screen edges. */
   .modal-backdrop { padding: 12px; }
+
+  /* Auth card: 36px all-round padding is heavy on a narrow phone. */
+  .auth-card { padding: 24px; border-radius: 16px; }
+
+  /* Page headings scale down so they don't dominate a small screen.
+     Scoped to page-level H1s — leaves data figures (prices, scores) alone. */
+  .main-shell main h1 { font-size: 20px !important; line-height: 1.25; }
+
+  /* Market-overview cards are 2-up on phones; the big price would otherwise
+     overflow / clip (e.g. "43,219.77"). Shrink it to fit and guard overflow. */
+  .idx-value {
+    font-size: 17px !important;
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 /* Respect the notch / status bar at the top for the sticky header. */
@@ -706,8 +748,11 @@ html.dark .modal-panel { background: rgba(15, 23, 42, 0.99) !important; }
 
 /* auth pages -------------------------------------------------------------- */
 .auth-shell {
-  min-height: 100vh; display: grid; place-items: center;
+  min-height: 100vh; min-height: 100dvh;
+  display: grid; place-items: center;
   padding: 24px;
+  padding-top: calc(24px + env(safe-area-inset-top, 0px));
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
   color: #e2e8f0;
 }
