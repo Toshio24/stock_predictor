@@ -142,6 +142,17 @@ _PRICE_IN = 1.00 / 1_000_000
 _PRICE_OUT = 5.00 / 1_000_000
 
 
+# Structured output via tool use: the Pydantic schema becomes the tool's
+# input_schema, and we force Claude to call it. This is the supported path
+# on anthropic==0.39.0 (which has no messages.parse()).
+_TOOL_NAME = "record_classification"
+_CLASSIFIER_TOOL = {
+    "name": _TOOL_NAME,
+    "description": "Record the structured sentiment classification for the article.",
+    "input_schema": ClassifierOutput.model_json_schema(),
+}
+
+
 def classify_article(
     *,
     headline: str,
@@ -165,7 +176,7 @@ def classify_article(
 
     t0 = time.monotonic()
     try:
-        response = client.messages.parse(
+        response = client.messages.create(
             model=_settings.claude_model,
             max_tokens=_settings.classify_max_tokens,
             system=[
@@ -176,13 +187,26 @@ def classify_article(
                 }
             ],
             messages=[{"role": "user", "content": user_text}],
-            output_format=ClassifierOutput,
+            tools=[_CLASSIFIER_TOOL],
+            # Force the model to return its answer as a call to our tool, so
+            # the output is always a structured object matching the schema.
+            tool_choice={"type": "tool", "name": _TOOL_NAME},
         )
     except anthropic.BadRequestError:
         log.exception("classify bad request — payload likely malformed")
         raise
 
     latency_ms = int((time.monotonic() - t0) * 1000)
+
+    # Pull the forced tool call out of the response and validate it against
+    # the Pydantic model. tool_choice guarantees a tool_use block is present.
+    tool_input = next(
+        (block.input for block in response.content if block.type == "tool_use"),
+        None,
+    )
+    if tool_input is None:
+        raise ValueError("classifier returned no tool_use block")
+    parsed = ClassifierOutput.model_validate(tool_input)
 
     usage = response.usage
     input_tokens = (usage.input_tokens or 0) + (getattr(usage, "cache_read_input_tokens", 0) or 0)
@@ -199,4 +223,4 @@ def classify_article(
         "cost_usd": round(cost, 6),
     }
 
-    return response.parsed_output, meta  # type: ignore[return-value]
+    return parsed, meta
