@@ -1,47 +1,47 @@
 <!-- News header -->
 <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
   <div>
-    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);">News feed</h1>
-    <p class="text-[14px]" style="color: var(--text-muted);">Curated headlines + AI-generated sentiment.</p>
+    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);"><%= t('News feed') %></h1>
+    <p class="text-[14px]" style="color: var(--text-muted);"><%= t('Curated headlines + AI-generated sentiment.') %></p>
   </div>
   <div class="flex gap-2">
-    <button class="glass-button">Preferences</button>
-    <button class="glass-button primary">+ Source</button>
+    <button class="glass-button"><%= t('Preferences') %></button>
+    <button class="glass-button primary">+ <%= t('Source') %></button>
   </div>
 </div>
 
 <!-- Breaking banner -->
 <div class="breaking mb-6">
   <span class="pulse"></span>
-  <span class="text-[11px] font-bold tracking-widest uppercase text-bear">Breaking</span>
+  <span class="text-[11px] font-bold tracking-widest uppercase text-bear"><%= t('Breaking') %></span>
   <span class="text-[14px] flex-1 truncate" style="color: var(--text-strong);"><%= breaking.headline %></span>
-  <span class="text-[12px] hide-mobile" style="color: var(--text-muted);"><%= breaking.timeAgo %> ago</span>
+  <span class="text-[12px] hide-mobile" style="color: var(--text-muted);"><%= breaking.timeAgo %> <%= t('ago') %></span>
 </div>
 
 <!-- Filter bar -->
 <div class="glass-card p-4 mb-6 flex flex-wrap items-center gap-3">
   <div class="flex gap-1.5 flex-wrap">
-    <button class="glass-tab active">All</button>
-    <button class="glass-tab">Macro</button>
-    <button class="glass-tab">Earnings</button>
-    <button class="glass-tab">Tech</button>
-    <button class="glass-tab">Crypto</button>
-    <button class="glass-tab">Energy</button>
+    <button class="glass-tab active"><%= t('All') %></button>
+    <button class="glass-tab"><%= t('Macro') %></button>
+    <button class="glass-tab"><%= t('Earnings') %></button>
+    <button class="glass-tab"><%= t('Tech') %></button>
+    <button class="glass-tab"><%= t('Crypto') %></button>
+    <button class="glass-tab"><%= t('Energy') %></button>
   </div>
   <div class="h-6 w-px" style="background: rgba(var(--border-rgb), 0.10);"></div>
   <div class="flex gap-1.5">
-    <button class="glass-tab">Bullish</button>
-    <button class="glass-tab">Bearish</button>
-    <button class="glass-tab">Neutral</button>
+    <button class="glass-tab"><%= t('Bullish') %></button>
+    <button class="glass-tab"><%= t('Bearish') %></button>
+    <button class="glass-tab"><%= t('Neutral') %></button>
   </div>
   <div class="flex-1 min-w-[180px]">
-    <input class="glass-input" placeholder="Search headlines…" />
+    <input class="glass-input" placeholder="<%= t('Search headlines…') %>" />
   </div>
 </div>
 
 <!-- Featured row -->
 <section class="mb-8">
-  <span class="section-title">Featured</span>
+  <span class="section-title"><%= t('Featured') %></span>
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
     <% news.filter(function(n){ return n.featured; }).slice(0, 2).forEach(function(n) { %>
       <%- include('../partials/news-card', { news: n, variant: 'featured' }) %>
@@ -51,7 +51,7 @@
 
 <!-- All news -->
 <section>
-  <span class="section-title">Latest</span>
+  <span class="section-title"><%= t('Latest') %></span>
   <div data-stagger class="stagger grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
     <% news.slice(2).forEach(function(n) { %>
       <%- include('../partials/news-card', { news: n, variant: 'expanded' }) %>

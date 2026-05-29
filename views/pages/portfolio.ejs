@@ -1,14 +1,14 @@
 <div class="mb-6">
-  <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);">Portfolio</h1>
-  <p class="text-[14px]" style="color: var(--text-muted);">Live P&L and signal exposure across your holdings.</p>
+  <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);"><%= t('Portfolio') %></h1>
+  <p class="text-[14px]" style="color: var(--text-muted);"><%= t('Live P&L and signal exposure across your holdings.') %></p>
 </div>
 <%- include('../partials/coming-soon', {
-  title: 'Portfolio — connect a broker',
-  description: 'Link IBKR, Schwab, Robinhood or upload a CSV to track positions in real time.',
+  title: t('Portfolio — connect a broker'),
+  description: t('Link IBKR, Schwab, Robinhood or upload a CSV to track positions in real time.'),
   icon: 'portfolio',
   features: [
-    'Realized + unrealized P&L by symbol and signal cohort',
-    'Risk exposure: sector, factor, beta-adjusted',
-    'Tax lots and FIFO/HIFO accounting'
+    t('Realized + unrealized P&L by symbol and signal cohort'),
+    t('Risk exposure: sector, factor, beta-adjusted'),
+    t('Tax lots and FIFO/HIFO accounting')
   ]
 }) %>

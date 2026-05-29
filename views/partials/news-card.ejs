@@ -35,7 +35,7 @@
           <a href="<%= n.url %>" target="_blank" rel="noopener noreferrer"
              class="text-[11px] hover:underline inline-flex items-center gap-1"
              style="color: var(--accent);">
-            Open article ↗
+            <%= t('Open article') %> ↗
           </a>
         <% } %>
       </div>
@@ -51,8 +51,8 @@
     <% } %>
 
     <div class="flex flex-wrap items-center gap-1.5">
-      <% n.tickers.slice(0, 4).forEach(function(t) { %>
-        <a href="/ticker/<%= t %>" class="ticker-badge hover:scale-105 transition"><%= t %></a>
+      <% (n.tickers || []).slice(0, 4).forEach(function(sym) { %>
+        <a href="/ticker/<%= sym %>" class="ticker-badge hover:scale-105 transition"><%= sym %></a>
       <% }); %>
       <span class="ml-auto text-[11px]" style="color: var(--text-muted);"><%= n.category %></span>
     </div>

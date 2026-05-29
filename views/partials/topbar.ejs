@@ -9,7 +9,7 @@
       <span class="absolute left-3 top-1/2 -translate-y-1/2" style="color: var(--text-muted);">
         <%- include('icon', { name: 'search', size: 16 }) %>
       </span>
-      <input id="global-search" type="search" placeholder="Search tickers, pages…  (⌘K)" class="glass-input pl-10 pr-16" autocomplete="off" />
+      <input id="global-search" type="search" placeholder="<%= t('Search tickers, pages…') %>  (⌘K)" class="glass-input pl-10 pr-16" autocomplete="off" />
       <span class="hidden sm:flex absolute right-3 top-1/2 -translate-y-1/2 items-center gap-1 text-[10px] font-mono px-1.5 py-0.5 rounded border" style="color: var(--text-muted); border-color: rgba(var(--border-rgb),0.15);">⌘K</span>
     </div>
     <div id="search-results" class="dropdown glass-card" style="left: 0; right: auto; width: 100%;"></div>
@@ -21,6 +21,11 @@
     <span class="text-[12px] font-medium"><%= marketStatus.label %></span>
     <span class="text-[11px] hidden xl:inline" style="color: var(--text-muted);"><%= marketStatus.next %></span>
   </div>
+
+  <!-- Language toggle -->
+  <a href="/lang/<%= lang === 'zh' ? 'en' : 'zh' %>" class="glass-button text-[12px] font-medium" style="text-decoration:none;" aria-label="Switch language" title="<%= lang === 'zh' ? 'Switch to English' : '切换到中文' %>">
+    <%= lang === 'zh' ? 'EN' : '中文' %>
+  </a>
 
   <!-- Theme toggle -->
   <button id="theme-toggle" class="glass-button" aria-label="Toggle theme">
@@ -39,8 +44,8 @@
     </button>
     <div id="notif-dropdown" class="dropdown glass-card">
       <div class="flex items-center justify-between px-3 py-2.5 border-b" style="border-color: rgba(var(--border-rgb),0.06);">
-        <div class="font-semibold text-[13px]" style="color: var(--text-strong);">Notifications</div>
-        <button data-action="mark-all" class="text-[11px] font-medium" style="color: var(--accent);">Mark all read</button>
+        <div class="font-semibold text-[13px]" style="color: var(--text-strong);"><%= t('Notifications') %></div>
+        <button data-action="mark-all" class="text-[11px] font-medium" style="color: var(--accent);"><%= t('Mark all read') %></button>
       </div>
       <div class="max-h-[380px] overflow-y-auto py-1">
         <% notifications.forEach(function(n){ %>
@@ -55,7 +60,7 @@
             <div class="min-w-0 flex-1">
               <div class="text-[13px] font-medium truncate" style="color: var(--text-strong);"><%= n.title %></div>
               <div class="text-[12px] truncate" style="color: var(--text-muted);"><%= n.body %></div>
-              <div class="text-[10px] mt-0.5" style="color: var(--text-muted);"><%= n.timeAgo %> ago</div>
+              <div class="text-[10px] mt-0.5" style="color: var(--text-muted);"><%= n.timeAgo %> <%= t('ago') %></div>
             </div>
             <button data-action="delete" class="opacity-0 group-hover:opacity-100 transition self-start p-1 rounded hover:bg-white/10" aria-label="Delete">
               <%- include('icon', { name: 'trash', size: 12 }) %>
@@ -77,11 +82,11 @@
         <div class="text-[11px]" style="color: var(--text-muted);"><%= user.email %></div>
       </div>
       <div class="py-1">
-        <a href="/settings" class="block px-3 py-2 text-[13px] rounded hover:bg-white/5" style="color: var(--text);">Settings</a>
-        <a href="/portfolio" class="block px-3 py-2 text-[13px] rounded hover:bg-white/5" style="color: var(--text);">Portfolio</a>
-        <a href="/alerts" class="block px-3 py-2 text-[13px] rounded hover:bg-white/5" style="color: var(--text);">Alerts</a>
+        <a href="/settings" class="block px-3 py-2 text-[13px] rounded hover:bg-white/5" style="color: var(--text);"><%= t('Settings') %></a>
+        <a href="/portfolio" class="block px-3 py-2 text-[13px] rounded hover:bg-white/5" style="color: var(--text);"><%= t('Portfolio') %></a>
+        <a href="/alerts" class="block px-3 py-2 text-[13px] rounded hover:bg-white/5" style="color: var(--text);"><%= t('Alerts') %></a>
         <hr class="my-1" style="border-color: rgba(var(--border-rgb),0.06);" />
-        <a href="/login" class="block px-3 py-2 text-[13px] rounded hover:bg-white/5" style="color: var(--bear);">Log out</a>
+        <a href="#" data-logout class="block px-3 py-2 text-[13px] rounded hover:bg-white/5" style="color: var(--bear);"><%= t('Log out') %></a>
       </div>
     </div>
   </div>

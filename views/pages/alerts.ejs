@@ -1,19 +1,19 @@
 <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
   <div>
-    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);">Alerts</h1>
-    <p class="text-[14px]" style="color: var(--text-muted);">Price, signal, and news triggers — push, email, or webhook.</p>
+    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);"><%= t('Alerts') %></h1>
+    <p class="text-[14px]" style="color: var(--text-muted);"><%= t('Price, signal, and news triggers — push, email, or webhook.') %></p>
   </div>
-  <button class="glass-button primary">+ New alert</button>
+  <button class="glass-button primary">+ <%= t('New alert') %></button>
 </div>
 
 <div class="glass-table">
   <table class="w-full">
     <thead>
       <tr>
-        <th>Trigger</th>
-        <th>Symbol</th>
-        <th>Channel</th>
-        <th>Status</th>
+        <th><%= t('Trigger') %></th>
+        <th><%= t('Symbol') %></th>
+        <th><%= t('Channel') %></th>
+        <th><%= t('Status') %></th>
         <th></th>
       </tr>
     </thead>
@@ -33,7 +33,7 @@
             <span class="sentiment-badge <%= r[3] === 'active' ? 'bullish' : 'neutral' %>"><%= r[3] %></span>
           </td>
           <td class="text-right">
-            <button class="glass-tab">Edit</button>
+            <button class="glass-tab"><%= t('Edit') %></button>
           </td>
         </tr>
       <% }); %>

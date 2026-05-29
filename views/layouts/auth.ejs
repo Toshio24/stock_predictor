@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="<%= lang === 'zh' ? 'zh-CN' : 'en' %>" class="dark">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -19,6 +19,9 @@
   <link rel="stylesheet" href="/css/styles.css" />
 </head>
 <body class="auth-shell">
+  <a href="/lang/<%= lang === 'zh' ? 'en' : 'zh' %>" class="glass-button text-[12px] font-medium" style="position:fixed; top:16px; right:16px; text-decoration:none; z-index:50;" aria-label="Switch language">
+    <%= lang === 'zh' ? 'EN' : '中文' %>
+  </a>
   <main class="w-full max-w-md fade-in">
     <%- include('../' + view) %>
   </main>

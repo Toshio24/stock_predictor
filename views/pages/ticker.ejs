@@ -22,11 +22,11 @@
   <div class="flex items-end gap-6">
     <div class="text-right">
       <div class="num text-4xl font-bold" style="color: var(--text-strong);">$<%= s.price.toFixed(2) %></div>
-      <div class="num text-[14px] font-semibold <%= changeClass %>"><%= changeSym %> <%= Math.abs(s.change).toFixed(2) %>% today</div>
+      <div class="num text-[14px] font-semibold <%= changeClass %>"><%= changeSym %> <%= Math.abs(s.change).toFixed(2) %>% <%= t('today') %></div>
     </div>
     <div class="flex flex-col gap-2">
-      <button class="glass-button">+ Watchlist</button>
-      <button class="glass-button primary">Set alert</button>
+      <button class="glass-button">+ <%= t('Watchlist') %></button>
+      <button class="glass-button primary"><%= t('Set alert') %></button>
     </div>
   </div>
 </div>
@@ -34,14 +34,14 @@
 <!-- Price chart -->
 <section class="mb-6">
   <div class="flex items-center justify-between mb-3">
-    <span class="section-title">Price · 90 days</span>
+    <span class="section-title"><%= t('Price · 90 days') %></span>
     <div class="flex gap-1.5">
       <button class="glass-tab">1D</button>
       <button class="glass-tab">5D</button>
       <button class="glass-tab">1M</button>
       <button class="glass-tab active">3M</button>
       <button class="glass-tab">1Y</button>
-      <button class="glass-tab">All</button>
+      <button class="glass-tab"><%= t('All') %></button>
     </div>
   </div>
   <div class="glass-card p-4">
@@ -53,12 +53,12 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
   <!-- Signal rationale -->
   <section class="lg:col-span-2">
-    <span class="section-title">Signal rationale</span>
+    <span class="section-title"><%= t('Signal rationale') %></span>
     <div class="glass-card p-5">
       <p class="text-[14px] leading-relaxed mb-4" style="color: var(--text);"><%= s.rationale %></p>
       <div>
         <div class="flex items-center justify-between text-[12px] mb-1.5">
-          <span style="color: var(--text-muted);">Model confidence</span>
+          <span style="color: var(--text-muted);"><%= t('Model confidence') %></span>
           <span class="num font-semibold" style="color: var(--text-strong);"><%= s.confidence %>%</span>
         </div>
         <div class="confidence-bar"><span style="width: <%= s.confidence %>%;"></span></div>
@@ -66,15 +66,15 @@
 
       <div class="grid grid-cols-3 gap-4 mt-5 pt-5 border-t" style="border-color: rgba(var(--border-rgb),0.08);">
         <div>
-          <div class="text-[11px] uppercase tracking-widest mb-1" style="color: var(--text-muted);">Signal age</div>
+          <div class="text-[11px] uppercase tracking-widest mb-1" style="color: var(--text-muted);"><%= t('Signal age') %></div>
           <div class="num text-[15px] font-semibold" style="color: var(--text-strong);"><%= s.updatedAt %></div>
         </div>
         <div>
-          <div class="text-[11px] uppercase tracking-widest mb-1" style="color: var(--text-muted);">Score</div>
+          <div class="text-[11px] uppercase tracking-widest mb-1" style="color: var(--text-muted);"><%= t('Score') %></div>
           <div class="num text-[15px] font-semibold" style="color: var(--text-strong);"><%= s.score %> / 100</div>
         </div>
         <div>
-          <div class="text-[11px] uppercase tracking-widest mb-1" style="color: var(--text-muted);">Direction</div>
+          <div class="text-[11px] uppercase tracking-widest mb-1" style="color: var(--text-muted);"><%= t('Direction') %></div>
           <div class="text-[15px] font-semibold capitalize" style="color: var(--text-strong);"><%= s.signal %></div>
         </div>
       </div>
@@ -83,17 +83,17 @@
 
   <!-- Fundamentals -->
   <section>
-    <span class="section-title">Fundamentals</span>
+    <span class="section-title"><%= t('Fundamentals') %></span>
     <div class="glass-card p-5">
       <% var rows = [
-          ['Market cap', fundamentals.marketCap],
-          ['P/E ratio', fundamentals.pe],
-          ['EPS', '$' + fundamentals.eps],
-          ['Dividend', fundamentals.dividend],
-          ['Beta', fundamentals.beta],
-          ['52w high', '$' + fundamentals.high52],
-          ['52w low', '$' + fundamentals.low52],
-          ['Avg volume', fundamentals.volume],
+          [t('Market cap'), fundamentals.marketCap],
+          [t('P/E ratio'), fundamentals.pe],
+          [t('EPS'), '$' + fundamentals.eps],
+          [t('Dividend'), fundamentals.dividend],
+          [t('Beta'), fundamentals.beta],
+          [t('52w high'), '$' + fundamentals.high52],
+          [t('52w low'), '$' + fundamentals.low52],
+          [t('Avg volume'), fundamentals.volume],
       ]; %>
       <dl class="grid grid-cols-1 gap-2.5">
         <% rows.forEach(function(r){ %>
@@ -110,17 +110,17 @@
 <!-- Signal history + news -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
   <section class="lg:col-span-2">
-    <span class="section-title">Signal history · last 5</span>
+    <span class="section-title"><%= t('Signal history · last 5') %></span>
     <div class="glass-table">
       <table class="w-full">
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Signal</th>
-            <th class="text-right">Score</th>
-            <th class="text-right">Entry</th>
-            <th class="text-right">Exit</th>
-            <th class="text-right">Result</th>
+            <th><%= t('Date') %></th>
+            <th><%= t('Signal') %></th>
+            <th class="text-right"><%= t('Score') %></th>
+            <th class="text-right"><%= t('Entry') %></th>
+            <th class="text-right"><%= t('Exit') %></th>
+            <th class="text-right"><%= t('Result') %></th>
           </tr>
         </thead>
         <tbody>
@@ -146,7 +146,7 @@
   </section>
 
   <section>
-    <span class="section-title">Related news</span>
+    <span class="section-title"><%= t('Related news') %></span>
     <div class="space-y-3">
       <% news.slice(0, 3).forEach(function(n) { %>
         <%- include('../partials/news-card', { news: n, variant: 'compact' }) %>

@@ -22,6 +22,7 @@ const path = require('path');
 
 const mock = require('./data/mock');
 const api = require('./data/api');
+const i18n = require('./data/i18n');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -148,6 +149,7 @@ const PUBLIC_PATHS = new Set([
 function isPublic(req) {
   if (PUBLIC_PATHS.has(req.path)) return true;
   if (req.path.startsWith('/api/auth/')) return true;
+  if (req.path.startsWith('/lang/')) return true;
   if (req.path === '/healthz') return true;
   return false;
 }
@@ -164,21 +166,34 @@ app.use((req, res, next) => {
 });
 
 // ---------------------------------------------------------------------------
+// Language: read the `lang` cookie (default en), expose res.locals.t /
+// res.locals.lang to every view. t(str) returns the localized string, or
+// the English source if no translation exists.
+// ---------------------------------------------------------------------------
+app.use((req, res, next) => {
+  const lang = i18n.normalizeLang(req.cookies && req.cookies.lang);
+  res.locals.lang = lang;
+  res.locals.t = (str) => i18n.translate(lang, str);
+  next();
+});
+
+// ---------------------------------------------------------------------------
 // Locals applied to every view
 // ---------------------------------------------------------------------------
 app.use((req, res, next) => {
+  const t = res.locals.t;
   res.locals.nav = [
-    { href: '/', label: 'Dashboard', icon: 'dashboard' },
-    { href: '/signals', label: 'Signals', icon: 'signals' },
-    { href: '/news', label: 'News', icon: 'news' },
-    { href: '/watchlist', label: 'Watchlist', icon: 'watchlist' },
-    { href: '/screener', label: 'Screener', icon: 'screener' },
-    { href: '/portfolio', label: 'Portfolio', icon: 'portfolio' },
-    { href: '/compare', label: 'Compare', icon: 'compare' },
-    { href: '/backtest', label: 'Backtest', icon: 'backtest' },
-    { href: '/ml', label: 'ML Data', icon: 'brain' },
-    { href: '/alerts', label: 'Alerts', icon: 'alerts' },
-    { href: '/settings', label: 'Settings', icon: 'settings' },
+    { href: '/', label: t('Dashboard'), icon: 'dashboard' },
+    { href: '/signals', label: t('Signals'), icon: 'signals' },
+    { href: '/news', label: t('News'), icon: 'news' },
+    { href: '/watchlist', label: t('Watchlist'), icon: 'watchlist' },
+    { href: '/screener', label: t('Screener'), icon: 'screener' },
+    { href: '/portfolio', label: t('Portfolio'), icon: 'portfolio' },
+    { href: '/compare', label: t('Compare'), icon: 'compare' },
+    { href: '/backtest', label: t('Backtest'), icon: 'backtest' },
+    { href: '/ml', label: t('ML Data'), icon: 'brain' },
+    { href: '/alerts', label: t('Alerts'), icon: 'alerts' },
+    { href: '/settings', label: t('Settings'), icon: 'settings' },
   ];
   res.locals.user = userFromIdToken(req.idToken);
   res.locals.marketStatus = mock.marketStatus();
@@ -337,6 +352,29 @@ app.get('/login', renderAuth('login', 'Log in'));
 app.get('/signup', renderAuth('signup', 'Sign up'));
 app.get('/forgot-password', renderAuth('forgot-password', 'Reset password'));
 app.get('/onboarding', renderAuth('onboarding', 'Welcome'));
+
+// Language toggle — set the `lang` cookie, then bounce back to wherever the
+// user was. Validated against the supported set so the cookie can't be set
+// to junk.
+app.get('/lang/:locale', (req, res) => {
+  const locale = i18n.normalizeLang(req.params.locale);
+  res.cookie('lang', locale, {
+    httpOnly: false,           // harmless; lets client JS read current lang
+    secure: IS_PROD,
+    sameSite: 'lax',
+    maxAge: 365 * 24 * 60 * 60 * 1000,
+    path: '/',
+  });
+  const back = req.get('Referer');
+  // Only redirect to same-origin relative paths to avoid open-redirect.
+  if (back) {
+    try {
+      const u = new URL(back);
+      return res.redirect(u.pathname + u.search);
+    } catch (_) { /* fall through */ }
+  }
+  res.redirect('/');
+});
 
 // ---------------------------------------------------------------------------
 // Session endpoints — the browser does the actual Firebase sign-in, then

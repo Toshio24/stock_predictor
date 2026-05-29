@@ -14,34 +14,34 @@
 
 <div class="flex items-center justify-between mb-2 flex-wrap gap-3">
   <div>
-    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);">My Tickers</h1>
+    <h1 class="text-2xl lg:text-3xl font-bold mb-1" style="color: var(--text-strong);"><%= t('My Tickers') %></h1>
     <p class="text-[14px]" style="color: var(--text-muted);">
-      Pick what to track — the workers only spend API credits on active tickers.
+      <%= t('Pick what to track — the workers only spend API credits on active tickers.') %>
     </p>
   </div>
   <div class="flex items-center gap-3 flex-wrap">
     <div class="text-[13px] glass-card px-4 py-2.5">
       <span class="font-bold tabular-nums" style="color: var(--text-strong);"><%= activeCount %></span>
-      <span style="color: var(--text-muted);"> active / <%= totalCount %> in universe</span>
+      <span style="color: var(--text-muted);"> <%= t('active /') %> <%= totalCount %> <%= t('in universe') %></span>
     </div>
-    <button id="add-ticker-btn" class="glass-button primary">+ Add symbol</button>
+    <button id="add-ticker-btn" class="glass-button primary">+ <%= t('Add symbol') %></button>
   </div>
 </div>
 
 <div class="glass-card mb-4 p-3 flex items-center gap-2 flex-wrap" style="background: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.25);">
   <span style="color: var(--accent);">●</span>
   <span class="text-[13px]" style="color: var(--text);">
-    Deactivating a ticker <strong>stops all news / Claude / Finnhub calls</strong> for it. Past data stays — reactivate any time to resume.
+    <%= t('Deactivating a ticker') %> <strong><%= t('stops all news / Claude / Finnhub calls') %></strong> <%= t('for it. Past data stays — reactivate any time to resume.') %>
   </span>
 </div>
 
 <div class="flex items-center gap-2 mb-4 flex-wrap">
-  <input id="ticker-filter" type="search" placeholder="Filter by symbol or name…" class="glass-input" style="max-width: 320px;" autocomplete="off" />
-  <button class="glass-tab active" data-filter="all">All</button>
-  <button class="glass-tab" data-filter="active">Active (<%= activeCount %>)</button>
-  <button class="glass-tab" data-filter="inactive">Inactive (<%= totalCount - activeCount %>)</button>
+  <input id="ticker-filter" type="search" placeholder="<%= t('Filter by symbol or name…') %>" class="glass-input" style="max-width: 320px;" autocomplete="off" />
+  <button class="glass-tab active" data-filter="all"><%= t('All') %></button>
+  <button class="glass-tab" data-filter="active"><%= t('Active') %> (<%= activeCount %>)</button>
+  <button class="glass-tab" data-filter="inactive"><%= t('Inactive') %> (<%= totalCount - activeCount %>)</button>
   <div class="ml-auto flex items-center gap-2">
-    <button id="bulk-deactivate" class="glass-tab" title="Deactivate everything visible">Deactivate visible</button>
+    <button id="bulk-deactivate" class="glass-tab" title="<%= t('Deactivate everything visible') %>"><%= t('Deactivate visible') %></button>
   </div>
 </div>
 
@@ -82,33 +82,33 @@
 <div id="add-ticker-modal" class="modal-backdrop hidden">
   <div class="modal-panel glass-card p-6">
     <div class="flex items-center justify-between mb-4">
-      <h3 class="text-lg font-bold" style="color: var(--text-strong);">Add a ticker</h3>
-      <button id="add-ticker-close" class="p-1.5 rounded hover:bg-white/10" aria-label="Close">
+      <h3 class="text-lg font-bold" style="color: var(--text-strong);"><%= t('Add a ticker') %></h3>
+      <button id="add-ticker-close" class="p-1.5 rounded hover:bg-white/10" aria-label="<%= t('Close') %>">
         <%- include('../partials/icon', { name: 'close', size: 16 }) %>
       </button>
     </div>
     <form id="add-ticker-form" class="space-y-3">
       <div>
-        <label class="text-[12px] uppercase tracking-widest" style="color: var(--text-muted);">Symbol</label>
-        <input name="symbol" required maxlength="10" placeholder="e.g. PLTR" class="glass-input mt-1 font-mono uppercase" />
+        <label class="text-[12px] uppercase tracking-widest" style="color: var(--text-muted);"><%= t('Symbol') %></label>
+        <input name="symbol" required maxlength="10" placeholder="<%= t('e.g. PLTR') %>" class="glass-input mt-1 font-mono uppercase" />
       </div>
       <div>
-        <label class="text-[12px] uppercase tracking-widest" style="color: var(--text-muted);">Company name</label>
-        <input name="name" required maxlength="200" placeholder="e.g. Palantir Technologies" class="glass-input mt-1" />
+        <label class="text-[12px] uppercase tracking-widest" style="color: var(--text-muted);"><%= t('Company name') %></label>
+        <input name="name" required maxlength="200" placeholder="<%= t('e.g. Palantir Technologies') %>" class="glass-input mt-1" />
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-[12px] uppercase tracking-widest" style="color: var(--text-muted);">Sector</label>
-          <input name="sector" maxlength="100" placeholder="Technology" class="glass-input mt-1" />
+          <label class="text-[12px] uppercase tracking-widest" style="color: var(--text-muted);"><%= t('Sector') %></label>
+          <input name="sector" maxlength="100" placeholder="<%= t('Technology') %>" class="glass-input mt-1" />
         </div>
         <div>
-          <label class="text-[12px] uppercase tracking-widest" style="color: var(--text-muted);">Exchange</label>
-          <input name="exchange" maxlength="20" placeholder="NASDAQ" class="glass-input mt-1" />
+          <label class="text-[12px] uppercase tracking-widest" style="color: var(--text-muted);"><%= t('Exchange') %></label>
+          <input name="exchange" maxlength="20" placeholder="<%= t('NASDAQ') %>" class="glass-input mt-1" />
         </div>
       </div>
       <div class="flex justify-end gap-2 pt-2">
-        <button type="button" id="add-ticker-cancel" class="glass-tab">Cancel</button>
-        <button type="submit" class="glass-button primary">Add &amp; activate</button>
+        <button type="button" id="add-ticker-cancel" class="glass-tab"><%= t('Cancel') %></button>
+        <button type="submit" class="glass-button primary"><%= t('Add & activate') %></button>
       </div>
       <div id="add-ticker-error" class="text-[12px] hidden" style="color: var(--bear);"></div>
     </form>

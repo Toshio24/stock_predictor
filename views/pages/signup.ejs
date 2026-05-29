@@ -3,30 +3,30 @@
     <div class="brand-square"><%- include('../partials/icon', { name: 'chart', size: 18 }) %></div>
     <div>
       <div class="text-[16px] font-bold">Signal</div>
-      <div class="text-[10px] uppercase tracking-widest opacity-60">AI Trading</div>
+      <div class="text-[10px] uppercase tracking-widest opacity-60"><%= t('AI Trading') %></div>
     </div>
   </div>
 
-  <h1 class="text-[22px] font-bold mb-1">Create your account</h1>
-  <p class="text-[13px] opacity-70 mb-6">Free for the first 30 days · no card required.</p>
+  <h1 class="text-[22px] font-bold mb-1"><%= t('Create your account') %></h1>
+  <p class="text-[13px] opacity-70 mb-6"><%= t('Free for the first 30 days · no card required.') %></p>
 
   <form data-auth="signup" class="space-y-4">
     <div>
-      <label class="text-[12px] font-medium mb-1.5 block">Full name</label>
+      <label class="text-[12px] font-medium mb-1.5 block"><%= t('Full name') %></label>
       <input name="name" required class="glass-input" placeholder="Ada Lovelace" />
     </div>
     <div>
-      <label class="text-[12px] font-medium mb-1.5 block">Email</label>
+      <label class="text-[12px] font-medium mb-1.5 block"><%= t('Email') %></label>
       <input name="email" type="email" required class="glass-input" placeholder="you@company.com" />
     </div>
     <div>
-      <label class="text-[12px] font-medium mb-1.5 block">Password</label>
-      <input name="password" type="password" required minlength="8" class="glass-input" placeholder="Min 8 characters" />
+      <label class="text-[12px] font-medium mb-1.5 block"><%= t('Password') %></label>
+      <input name="password" type="password" required minlength="8" class="glass-input" placeholder="<%= t('Min 8 characters') %>" />
     </div>
-    <button type="submit" class="glass-button primary w-full justify-center" style="padding: 12px;">Create account</button>
+    <button type="submit" class="glass-button primary w-full justify-center" style="padding: 12px;"><%= t('Create account') %></button>
   </form>
 
   <p class="text-[12px] text-center mt-6 opacity-70">
-    Have an account? <a href="/login" style="color: var(--accent);" class="font-medium">Log in</a>
+    <%= t('Have an account?') %> <a href="/login" style="color: var(--accent);" class="font-medium"><%= t('Log in') %></a>
   </p>
 </div>
